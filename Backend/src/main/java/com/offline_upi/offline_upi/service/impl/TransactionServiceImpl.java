@@ -26,7 +26,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Autowired
     private UserRepository userRepository;
-
+    
     @Override
     public Transaction initiateTransaction(Transaction transaction) {
         // Validate sender exists
