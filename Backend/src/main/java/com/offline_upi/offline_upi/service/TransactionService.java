@@ -16,5 +16,6 @@ public interface TransactionService {
     Page<Transaction> getTransactionsByUser(String upiId, Pageable pageable);
     List<Transaction> getTransactionsByStatus(Transaction.TransactionStatus status);
     Transaction processSmsTransaction(String encryptedData);
-    Optional<Transaction> getTransactionBySmsReference(String smsReference);
+    // Optional<Transaction> getTransactionBySmsReference(String smsReference);
+    Transaction saveTransaction(Transaction transaction);
 } 

@@ -41,20 +41,31 @@ public class Transaction {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
-    @Column(name = "encryption_nonce")
-    private String encryptionNonce;
-
     @Column(name = "sms_reference", unique = true)
     private String smsReference;
+
+    @Column(name = "is_offline_transaction")
+    private boolean isOfflineTransaction;
+
+    @Column(name = "sms_message")
+    private String smsMessage;
 
     @Column(name = "retry_count")
     private Integer retryCount = 0;
 
     public enum TransactionType {
-        DEBIT, CREDIT
+        DEBIT,  // Money going out (payment)
+        CREDIT  // Money coming in (receipt)
     }
 
     public enum TransactionStatus {
-        PENDING, COMPLETED, FAILED
+        PENDING,
+        COMPLETED,
+        FAILED,
+        OFFLINE_PENDING
+    }
+
+    public void setIsOfflineTransaction(boolean isOfflineTransaction) {
+        this.isOfflineTransaction = isOfflineTransaction;
     }
 } 
