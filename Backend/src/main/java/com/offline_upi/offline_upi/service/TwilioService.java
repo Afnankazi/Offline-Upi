@@ -5,6 +5,7 @@ import com.offline_upi.offline_upi.model.Transaction;
 import com.offline_upi.offline_upi.model.User;
 import com.offline_upi.offline_upi.repository.UserRepository;
 import com.offline_upi.offline_upi.exception.TransactionException;
+import com.offline_upi.offline_upi.util.AESUtil;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +27,20 @@ public class TwilioService {
     private ObjectMapper objectMapper;
 
     // Twilio phone number
+    private static final String TWILIO_PHONE_NUMBER = "+19152683408";
 
+   
 
     public void receiveSms(String from, String body) {
         try {
-            System.out.println("Original message: " + body);
+            System.out.println("Original encrypted message: " + body);
+            
+            // Decrypt the message
+            String decryptedBody = AESUtil.decrypt(body);
+            System.out.println("Decrypted message: " + decryptedBody);
             
             // Clean the message body
-            String cleanedBody = body
+            String cleanedBody = decryptedBody
                 .replaceAll("[^\\x20-\\x7E]", "") // Remove all non-ASCII characters
                 .replaceAll("\\s+", " ")          // Replace multiple spaces with single space
                 .replaceAll("\\s*,\\s*", ",")     // Remove spaces around commas
@@ -42,9 +49,10 @@ public class TwilioService {
             
             System.out.println("Cleaned message: " + cleanedBody);
             
-            // Fix the sender object structure
-            cleanedBody = cleanedBody.replaceAll("\\{ \"sender\":\\{", "{\"sender\":{");
-            cleanedBody = cleanedBody.replaceAll("\"upiId\":\"([^\"]+)\"", "\"upiId\":\"$1\"}");
+            // Only add closing brace if it's not already there
+            if (!cleanedBody.matches(".*\"upiId\":\"[^\"]+\"}.*")) {
+                cleanedBody = cleanedBody.replaceAll("\"upiId\":\"([^\"]+)\"", "\"upiId\":\"$1\"}");
+            }
             
             // Ensure the JSON is properly formatted
             if (!cleanedBody.endsWith("}")) {
@@ -59,6 +67,7 @@ public class TwilioService {
             // Parse the JSON message into a Transaction object
             Transaction transaction = objectMapper.readValue(cleanedBody, Transaction.class);
             System.out.println("successfully parsed the json");
+            
             // Validate sender exists
             User sender = userRepository.findByUpiId(transaction.getSender().getUpiId())
                 .orElseThrow(() -> new TransactionException("Sender not found"));
@@ -66,7 +75,8 @@ public class TwilioService {
             // Set additional transaction details
             transaction.setSender(sender);
             transaction.setStatus(Transaction.TransactionStatus.PENDING);
-         
+            transaction.setIsOfflineTransaction(true);
+            transaction.setSmsReference(generateSmsReference());
             
             // Save the transaction
             transactionService.initiateTransaction(transaction);
@@ -78,12 +88,20 @@ public class TwilioService {
                 transaction.getAmount(),
                 transaction.getReceiverUpi()
             );
-          
+            
+            // Encrypt the confirmation message before sending
+            String encryptedConfirmation = AESUtil.encrypt(confirmationMessage);
+      
             
         } catch (Exception e) {
             // Send error message to user
             String errorMessage = "Failed to process transaction: " + e.getMessage();
-
+            try {
+                String encryptedError = AESUtil.encrypt(errorMessage);
+           
+            } catch (Exception ex) {
+                throw new RuntimeException("Failed to send error message: " + ex.getMessage(), ex);
+            }
             throw new RuntimeException(errorMessage, e);
         }
     }

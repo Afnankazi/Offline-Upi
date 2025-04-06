@@ -18,4 +18,5 @@ public interface TransactionService {
     Transaction processSmsTransaction(String encryptedData);
     // Optional<Transaction> getTransactionBySmsReference(String smsReference);
     Transaction saveTransaction(Transaction transaction);
+    Transaction encryptedTransaction(String encryptedData);
 } 

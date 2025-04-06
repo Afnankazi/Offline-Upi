@@ -7,6 +7,8 @@ import com.offline_upi.offline_upi.repository.TransactionRepository;
 import com.offline_upi.offline_upi.repository.UserRepository;
 import com.offline_upi.offline_upi.service.TransactionService;
 import com.offline_upi.offline_upi.util.SmsTransactionParser;
+import com.offline_upi.offline_upi.util.AESUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +28,51 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     
+    @Override
+    public Transaction encryptedTransaction(String encryptedData) {
+        try {
+            System.out.println("Received encrypted data: " + encryptedData);
+            
+            // Decrypt the data using AES
+            String decryptedData = AESUtil.decrypt(encryptedData);
+            System.out.println("Decrypted data: " + decryptedData);
+            
+            // Clean the decrypted data
+            String cleanedData = decryptedData
+                .replaceAll("[^\\x20-\\x7E]", "") // Remove all non-ASCII characters
+                .replaceAll("\\s+", " ")          // Replace multiple spaces with single space
+                .replaceAll("\\s*,\\s*", ",")     // Remove spaces around commas
+                .replaceAll("\\s*:\\s*", ":")     // Remove spaces around colons
+                .trim();
+            
+            System.out.println("Cleaned data: " + cleanedData);
+            
+            // Parse the JSON into a Transaction object
+            Transaction transaction = objectMapper.readValue(cleanedData, Transaction.class);
+            System.out.println("Successfully parsed transaction: " + transaction);
+            
+            // Set additional transaction details
+            transaction.setStatus(Transaction.TransactionStatus.PENDING);
+            transaction.setInitiatedAt(LocalDateTime.now());
+            transaction.setIsOfflineTransaction(true);
+            transaction.setSmsReference(generateSmsReference());
+            
+            // Initiate the transaction
+            return initiateTransaction(transaction);
+            
+        } catch (Exception e) {
+            throw new TransactionException("Failed to process encrypted transaction: " + e.getMessage(), e);
+        }
+    }
+    
+    private String generateSmsReference() {
+        return "SMS" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+    }
+
     @Override
     public Transaction initiateTransaction(Transaction transaction) {
         // Validate sender exists
@@ -157,11 +203,6 @@ public class TransactionServiceImpl implements TransactionService {
         return "";
     }
     
-    private String generateSmsReference() {
-        // Generate a unique reference number for the SMS transaction
-        return "SMS" + System.currentTimeMillis() + (int)(Math.random() * 1000);
-    }
-
     @Override
     public List<Transaction> getTransactionsByUser(String upiId) {
         return transactionRepository.findBySenderUpiId(upiId);
