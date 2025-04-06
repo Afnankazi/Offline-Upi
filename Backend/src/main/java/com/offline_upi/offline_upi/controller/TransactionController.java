@@ -27,7 +27,7 @@ public class TransactionController {
     }
     @PostMapping("/einitiate")
     public ResponseEntity<Transaction> Transaction(@RequestBody Encryption transaction) {
-        return new ResponseEntity<>(transactionServiceImpl.encryptedTransaction(transaction.getEncryptedData()), HttpStatus.CREATED);
+        return new ResponseEntity<>(transactionServiceImpl.encryptedTransaction(transaction.getE()), HttpStatus.CREATED);
     }
 
     // ... rest of the code ...

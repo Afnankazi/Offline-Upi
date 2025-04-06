@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 public class Encryption {
    
-    private String encryptedData;
+    private String e;
 }

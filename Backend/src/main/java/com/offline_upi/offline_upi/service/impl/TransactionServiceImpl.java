@@ -37,8 +37,9 @@ public class TransactionServiceImpl implements TransactionService {
         try {
             System.out.println("Received encrypted data: " + encryptedData);
             
-            // Decrypt the data using AES
-            String decryptedData = AESUtil.decrypt(encryptedData);
+            // Decrypt the data
+            byte[] decryptedBytes = AESUtil.decrypt(encryptedData);
+            String decryptedData = new String(decryptedBytes);
             System.out.println("Decrypted data: " + decryptedData);
             
             // Clean the decrypted data
@@ -173,35 +174,29 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Transaction processSmsTransaction(String encryptedData) {
         // TODO: Decrypt the data using your encryption method
-        String decryptedData = decryptData(encryptedData);
+        // String decryptedData = decryptData(encryptedData);
         
-        // Extract sender UPI from the SMS (you'll need to implement this based on your SMS format)
-        String senderUpi = extractSenderUpi(decryptedData);
+        // // Extract sender UPI from the SMS (you'll need to implement this based on your SMS format)
+        // String senderUpi = extractSenderUpi(decryptedData);
         
-        // Get sender user
-        User sender = userRepository.findById(senderUpi)
-                .orElseThrow(() -> new TransactionException("Sender not found"));
+        // // Get sender user
+        // User sender = userRepository.findById(senderUpi)
+        //         .orElseThrow(() -> new TransactionException("Sender not found"));
         
-        // Parse SMS and create transaction
-        Transaction transaction = SmsTransactionParser.parseSmsToTransaction(decryptedData, sender);
+        // // Parse SMS and create transaction
+        // Transaction transaction = SmsTransactionParser.parseSmsToTransaction(decryptedData, sender);
         
-        // Set SMS reference
-        transaction.setSmsReference(generateSmsReference());
+        // // // Set SMS reference
+        // // transaction.setSmsReference(generateSmsReference());
         
-        // Save and return the transaction
-        return transactionRepository.save(transaction);
+        // // Save and return the transaction
+        // return transactionRepository.save(transaction);
+        return null;
     }
     
-    private String decryptData(String encryptedData) {
-        // TODO: Implement your decryption logic
-        return encryptedData;
-    }
+ 
     
-    private String extractSenderUpi(String smsMessage) {
-        // TODO: Implement logic to extract sender UPI from SMS
-        // This will depend on your SMS format
-        return "";
-    }
+
     
     @Override
     public List<Transaction> getTransactionsByUser(String upiId) {

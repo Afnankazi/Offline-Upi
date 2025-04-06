@@ -36,7 +36,7 @@ public class TwilioService {
             System.out.println("Original encrypted message: " + body);
             
             // Decrypt the message
-            String decryptedBody = AESUtil.decrypt(body);
+            String decryptedBody = AESUtil.decryptAndDecompress(body);
             System.out.println("Decrypted message: " + decryptedBody);
             
             // Clean the message body
@@ -49,18 +49,18 @@ public class TwilioService {
             
             System.out.println("Cleaned message: " + cleanedBody);
             
-            // Only add closing brace if it's not already there
-            if (!cleanedBody.matches(".*\"upiId\":\"[^\"]+\"}.*")) {
-                cleanedBody = cleanedBody.replaceAll("\"upiId\":\"([^\"]+)\"", "\"upiId\":\"$1\"}");
-            }
+            // // Only add closing brace if it's not already there
+            // if (!cleanedBody.matches(".*\"upiId\":\"[^\"]+\"}.*")) {
+            //     cleanedBody = cleanedBody.replaceAll("\"upiId\":\"([^\"]+)\"", "\"upiId\":\"$1\"}");
+            // }
             
-            // Ensure the JSON is properly formatted
-            if (!cleanedBody.endsWith("}")) {
-                cleanedBody += "}";
-            }
+            // // Ensure the JSON is properly formatted
+            // if (!cleanedBody.endsWith("}")) {
+            //     cleanedBody += "}";
+            // }
             
-            // Fix any missing quotes around property names
-            cleanedBody = cleanedBody.replaceAll("([{,]\s*)([a-zA-Z0-9]+)(\s*:)", "$1\"$2\"$3");
+            // // Fix any missing quotes around property names
+            // cleanedBody = cleanedBody.replaceAll("([{,]\s*)([a-zA-Z0-9]+)(\s*:)", "$1\"$2\"$3");
             
             System.out.println("Final JSON: " + cleanedBody);
             
