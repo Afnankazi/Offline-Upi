@@ -26,7 +26,7 @@ public class TwilioService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // Twilio phone number
+
     private static final String TWILIO_PHONE_NUMBER = "+19152683408";
 
    
@@ -67,21 +67,18 @@ public class TwilioService {
             // Parse the JSON message into a Transaction object
             Transaction transaction = objectMapper.readValue(cleanedBody, Transaction.class);
             System.out.println("successfully parsed the json");
-            
-            // Validate sender exists
+        
             User sender = userRepository.findByUpiId(transaction.getSender().getUpiId())
                 .orElseThrow(() -> new TransactionException("Sender not found"));
-            
-            // Set additional transaction details
+
             transaction.setSender(sender);
             transaction.setStatus(Transaction.TransactionStatus.PENDING);
             transaction.setIsOfflineTransaction(true);
             transaction.setSmsReference(generateSmsReference());
             
-            // Save the transaction
+   
             transactionService.initiateTransaction(transaction);
-            
-            // Send confirmation SMS
+   
             String confirmationMessage = String.format(
                 "Transaction initiated successfully. Reference: %s. Amount: %.2f to %s",
                 transaction.getSmsReference(),

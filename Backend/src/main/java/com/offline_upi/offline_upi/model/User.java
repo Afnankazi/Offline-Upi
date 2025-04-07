@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 
 @Data
 @Entity
@@ -30,6 +32,11 @@ public class User {
 
     @Column(name = "balance", nullable = false)
     private BigDecimal balance;
+
+    @Column(name = "email", nullable = false, unique = true)
+    @Email(message = "Please provide a valid email address")
+    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$", message = "Invalid email format")
+    private String email;
 
     @JsonIgnore
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)

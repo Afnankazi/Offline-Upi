@@ -7,6 +7,7 @@ import java.util.Optional;
 public interface UserService {
     User createUser(User user);
     Optional<User> getUserByUpiId(String upiId);
+    String getBalance(User user);
     Optional<User> getUserByPhoneNumber(String phoneNumber);
     User updateUser(User user);
     void deleteUser(String upiId);

@@ -80,4 +80,16 @@ public class UserServiceImpl implements UserService {
     public boolean existsByPhoneNumber(String phoneNumber) {
         return userRepository.existsByPhoneNumber(phoneNumber);
     }
-} 
+
+    @Override
+    public String getBalance(User user) {
+        User foundUser = userRepository.findByUpiId(user.getUpiId())
+                .orElseThrow(() -> new IllegalArgumentException("User with UPI ID " + user.getUpiId() + " not found"));
+        
+        if (!foundUser.getHashedPin().equals(user.getHashedPin())) {
+            throw new IllegalArgumentException("Invalid PIN");
+        }
+        
+        return foundUser.getBalance().toString();
+    }
+}

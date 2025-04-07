@@ -8,6 +8,7 @@ import com.offline_upi.offline_upi.repository.UserRepository;
 import com.offline_upi.offline_upi.service.TransactionService;
 import com.offline_upi.offline_upi.util.SmsTransactionParser;
 import com.offline_upi.offline_upi.util.AESUtil;
+import com.offline_upi.offline_upi.util.MailUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,9 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private MailUtil mailUtil;
     
     @Override
     public Transaction encryptedTransaction(String encryptedData) {
@@ -103,7 +107,14 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setStatus(Transaction.TransactionStatus.PENDING);
         transaction.setInitiatedAt(LocalDateTime.now());
         
-        return transactionRepository.save(transaction);
+        // Save transaction first to get the ID
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        
+        // Send notifications after saving
+        mailUtil.sendCreditNotification(receiver.getEmail(), sender.getUpiId(), savedTransaction.getAmount().toString(), savedTransaction.getTransactionId().toString());
+        mailUtil.sendTransactionConfirmation(sender.getEmail(), savedTransaction.getTransactionId().toString(), savedTransaction.getAmount().toString(), receiver.getUpiId());
+        
+        return savedTransaction;
     }
 
     @Override
