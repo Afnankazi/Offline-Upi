@@ -1,7 +1,6 @@
 package com.offline_upi.offline_upi.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
@@ -9,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.core.io.ClassPathResource;
-import java.io.UnsupportedEncodingException;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -18,10 +15,6 @@ public class MailUtil {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
-    private String fromEmail;
-
-    private static final String SENDER_NAME = "Pay Seva";
     private static final String LOGO_CID = "logo";
     
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
@@ -30,23 +23,23 @@ public class MailUtil {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             
+            // Set basic email properties
             helper.setTo(to);
-            helper.setFrom(fromEmail, SENDER_NAME);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
             
             // Add logo as inline image
             helper.addInline(LOGO_CID, new ClassPathResource("static/images/logo.png"));
             
-            // Improved headers
-            message.addHeader("X-Mailer", "Pay Seva");
-            message.addHeader("List-Unsubscribe", String.format("<mailto:%s?subject=unsubscribe>", fromEmail));
-            message.addHeader("MIME-Version", "1.0");
-            message.addHeader("X-Entity-Ref-ID", UUID.randomUUID().toString());
+            // Add authentication headers
+            message.addHeader("X-Mailer", "Offline-UPI");
+            message.addHeader("Precedence", "bulk");
+            message.addHeader("List-Unsubscribe", "<mailto:support@offline-upi.com>");
+            message.addHeader("X-Auto-Response-Suppress", "OOF, AutoReply");
             
             mailSender.send(message);
             log.info("Email sent successfully to: {}", to);
-        } catch (MessagingException | UnsupportedEncodingException e) {
+        } catch (MessagingException e) {
             log.error("Failed to send email to: {}", to, e);
             throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
         }

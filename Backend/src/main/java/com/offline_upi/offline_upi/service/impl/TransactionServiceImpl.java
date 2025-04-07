@@ -42,9 +42,9 @@ public class TransactionServiceImpl implements TransactionService {
             System.out.println("Received encrypted data: " + encryptedData);
             
             // Decrypt the data
-            byte[] decryptedBytes = AESUtil.decrypt(encryptedData);
-            String decryptedData = new String(decryptedBytes);
-            System.out.println("Decrypted data: " + decryptedData);
+            String decryptedData = AESUtil.decryptAndDecompress(encryptedData);
+        
+            
             
             // Clean the decrypted data
             String cleanedData = decryptedData
