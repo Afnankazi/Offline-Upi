@@ -4,53 +4,127 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { ChevronLeft, Home, Camera, CameraOff } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import PinConfirmation from '@/components/PinConfirmation';
 
 const QRCodeScanner = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [data, setData] = useState('');
-  const [scanning, setScanning] = useState(true);
-  const [currentStep, setCurrentStep] = useState('scanning');
-  const [amount, setAmount] = useState('');
   const [upiId, setUpiId] = useState('');
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const qrCodeScannerRef = useRef<Html5Qrcode | null>(null);
-  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scannerRef = useRef(null);
+  const scanTimeoutRef = useRef(null);
+  
+  // Function to extract UPI ID from QR code data
+  const extractUpiId = (decodedText) => {
+    // If it's a direct UPI ID (e.g., "username@bank")
+    if (decodedText.includes('@') && !decodedText.includes('upi://')) {
+      return decodedText;
+    }
+    
+    // If it's a UPI URL
+    if (decodedText.includes('upi://')) {
+      try {
+        // Remove the upi:// prefix
+        const upiUrl = decodedText.replace('upi://', '');
+        
+        // Try to parse as URL parameters
+        const urlParams = new URLSearchParams(upiUrl);
+        const extractedUpiId = urlParams.get('pa');
+        
+        if (extractedUpiId) {
+          return extractedUpiId;
+        }
+        
+        // If no 'pa' parameter, try to extract from the path
+        // Some UPI URLs have format like upi://pay?pa=username@bank
+        const pathParts = upiUrl.split('?');
+        if (pathParts.length > 1) {
+          const queryParams = new URLSearchParams(pathParts[1]);
+          const pathUpiId = queryParams.get('pa');
+          if (pathUpiId) {
+            return pathUpiId;
+          }
+        }
+        
+        // If we can't extract, return the original text
+        return decodedText;
+      } catch (parseError) {
+        console.error("Error parsing UPI URL:", parseError);
+        return decodedText;
+      }
+    }
+    
+    // If it's not a UPI format, return the original text
+    return decodedText;
+  };
+
+  // Function to handle successful scan
+  const handleSuccessfulScan = async (decodedText) => {
+    try {
+      // Stop the scanner
+      if (scannerRef.current) {
+        await scannerRef.current.stop();
+        setIsCameraActive(false);
+      }
+      
+      // Extract UPI ID from the QR code
+      const extractedUpiId = extractUpiId(decodedText);
+      
+      // Store the UPI ID
+      setUpiId(extractedUpiId);
+      
+      // Show success message
+      toast({
+        title: "QR Code Scanned",
+        description: `UPI ID: ${extractedUpiId}`,
+      });
+      
+      // Redirect to transfer page with the UPI ID
+      navigate('/upi-transfer', { 
+        state: { 
+          upiId: extractedUpiId,
+          fromQR: true
+        } 
+      });
+    } catch (error) {
+      console.error("Error handling scan result:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process QR code. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Function to start the camera
   const startCamera = async () => {
-    if (qrCodeScannerRef.current) {
-      try {
-        // Stop any existing camera session
-        await qrCodeScannerRef.current.stop();
-      } catch (error) {
-        console.error("Error stopping previous camera session:", error);
-      }
+    // If camera is already active, don't try to start it again
+    if (isCameraActive) return;
+    
+    // Clear any existing scanner
+    await stopCamera();
+
+    // Check if browser supports getUserMedia
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError("Your browser doesn't support camera access. Please try a different browser.");
+      return;
     }
 
     try {
       // Create a new instance of Html5Qrcode
       const html5QrCode = new Html5Qrcode("qr-reader");
-      qrCodeScannerRef.current = html5QrCode;
+      scannerRef.current = html5QrCode;
 
       // Start the camera with optimized settings
       await html5QrCode.start(
         { 
-          facingMode: "environment",
-          // focusMode: "continuous" // Helps with focus stability
+          facingMode: { exact: "environment" }, // Force back camera
         },
         {
           fps: 10,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
           disableFlip: false,
-          videoConstraints: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
         },
         (decodedText) => {
           // Clear any existing timeout
@@ -60,19 +134,13 @@ const QRCodeScanner = () => {
 
           // Set a timeout to prevent multiple rapid scans
           scanTimeoutRef.current = setTimeout(() => {
-            handleSuccessfulScan(decodedText, html5QrCode);
+            handleSuccessfulScan(decodedText);
           }, 500);
         },
         (errorMessage) => {
           // Only show error if it's not a common scanning error
           if (!errorMessage.includes("QR code parse error")) {
             console.error("QR Scanner error:", errorMessage);
-            setCameraError("Camera access error: " + errorMessage);
-            toast({
-              title: "Camera Error",
-              description: "Could not access camera. Please check permissions.",
-              variant: "destructive",
-            });
           }
         }
       );
@@ -86,80 +154,60 @@ const QRCodeScanner = () => {
     }
   };
 
-  // Function to handle successful scan
-  const handleSuccessfulScan = async (decodedText: string, scanner: Html5Qrcode) => {
-    try {
-      // Stop the scanner
-      await scanner.stop();
-      setIsCameraActive(false);
-      setScanning(false);
-      
-      // Extract UPI ID from the QR code
-      let extractedUpiId = decodedText;
-      
-      // If it's a URL, try to extract the UPI ID
-      if (decodedText.includes('upi://')) {
-        try {
-          const urlParams = new URLSearchParams(decodedText.replace('upi://', ''));
-          extractedUpiId = urlParams.get('pa') || decodedText;
-        } catch (parseError) {
-          console.error("Error parsing UPI URL:", parseError);
-          // Fall back to the original text if parsing fails
-        }
+  // Function to stop the camera
+  const stopCamera = async () => {
+    if (scanTimeoutRef.current) {
+      clearTimeout(scanTimeoutRef.current);
+      scanTimeoutRef.current = null;
+    }
+    
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current = null;
+      } catch (error) {
+        console.error("Error stopping camera:", error);
+      } finally {
+        setIsCameraActive(false);
       }
-      
-      // Store the UPI ID
-      setUpiId(extractedUpiId);
-      
-      // Show success message
-      toast({
-        title: "QR Code Scanned",
-        description: `UPI ID: ${extractedUpiId}`,
-      });
-      
-      // Redirect to transfer page with the UPI ID
-      navigate('/transfer', { 
-        state: { 
-          upiId: extractedUpiId,
-          fromQR: true
-        } 
-      });
-    } catch (error) {
-      console.error("Error handling scan result:", error);
-      toast({
-        title: "Error",
-        description: "Failed to process QR code. Please try again.",
-        variant: "destructive",
-      });
-      // Restart the camera
-      startCamera();
     }
   };
 
-  // Initialize camera on component mount
-  useEffect(() => {
-    // Check if browser supports getUserMedia
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setCameraError("Your browser doesn't support camera access. Please try a different browser.");
-      return;
+  // Toggle camera on/off
+  const toggleCamera = async () => {
+    if (isCameraActive) {
+      await stopCamera();
+    } else {
+      await startCamera();
     }
+  };
 
-    // Start the camera
-    startCamera();
+  // Handle camera errors with a more user-friendly approach
+  const handleCameraError = (error) => {
+    console.error("Camera error:", error);
+    setCameraError(
+      typeof error === 'string' 
+        ? error 
+        : "Camera access failed. Please check your camera permissions."
+    );
+    setIsCameraActive(false);
+    
+    toast({
+      title: "Camera Error",
+      description: "Could not access camera. Please check permissions.",
+      variant: "destructive",
+    });
+  };
 
+  // Initialize camera on component mount - but only if not already active
+  useEffect(() => {
+    if (!isCameraActive) {
+      startCamera().catch(handleCameraError);
+    }
+    
     // Cleanup on unmount
     return () => {
-      if (scanTimeoutRef.current) {
-        clearTimeout(scanTimeoutRef.current);
-      }
-      
-      if (qrCodeScannerRef.current) {
-        try {
-          qrCodeScannerRef.current.stop();
-        } catch (error) {
-          console.error("Error stopping scanner:", error);
-        }
-      }
+      stopCamera();
     };
   }, []);
 
@@ -169,21 +217,7 @@ const QRCodeScanner = () => {
 
   const handleRetry = () => {
     setCameraError(null);
-    setScanning(true);
-    startCamera();
-  };
-
-  const toggleCamera = async () => {
-    if (isCameraActive && qrCodeScannerRef.current) {
-      try {
-        await qrCodeScannerRef.current.stop();
-        setIsCameraActive(false);
-      } catch (error) {
-        console.error("Error stopping camera:", error);
-      }
-    } else {
-      startCamera();
-    }
+    startCamera().catch(handleCameraError);
   };
 
   return (
@@ -211,7 +245,10 @@ const QRCodeScanner = () => {
             </div>
           ) : (
             <>
-              <div id="qr-reader" className="w-full relative"></div>
+              <div className="w-full relative">
+                {/* Only render the qr-reader div when camera is active or about to be activated */}
+                <div id="qr-reader" className="w-full"></div>
+              </div>
               <div className="flex justify-center mt-4">
                 <Button 
                   onClick={toggleCamera} 
