@@ -7,8 +7,8 @@ export const sendTransactionSMS = async (
   encryptedData: string
 ): Promise<void> => {
   try {
-    // Create the SMS message with the encrypted data
-    const message = JSON.stringify({ e: encryptedData });
+    // Use the encrypted data directly as the message
+    const message = encryptedData;
     
     // Create the SMS URL with the phone number and message
     const smsUrl = `sms:${TWILIO_PHONE_NUMBER}?body=${encodeURIComponent(message)}`;

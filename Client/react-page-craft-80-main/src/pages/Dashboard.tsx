@@ -25,13 +25,17 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
+import { API_BASE_URL } from '@/config';
+import axiosInstance from '@/utils/axios';
+import { AxiosError } from 'axios';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const userName = localStorage.getItem('name');
   const upiId = localStorage.getItem('upiId');
-  const [balance, setBalance] = useState("0");
+  const [balance, setBalance] = useState("");
+  const [balanceLoaded, setBalanceLoaded] = useState(false);
   const [language, setLanguage] = useState('en');
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
@@ -39,7 +43,8 @@ const Dashboard = () => {
 
   // Fetch balance on component mount
   useEffect(() => {
-    // You could fetch initial balance here if needed
+    // We can't fetch balance automatically since we need the PIN
+    // Balance will be fetched when user clicks the refresh button
   }, []);
 
   const recentContacts = [
@@ -117,15 +122,16 @@ const Dashboard = () => {
       const hashedPin = SHA256(pin).toString();
       
       // Make request to backend
-      const response = await axios.post('http://localhost:8080/api/users/Balance', {
-        upiId: upiId,
-        hashedPin: hashedPin
-      }, {
-        withCredentials: true
+      const response = await axiosInstance.get('/api/users/Balance', {
+        params: {
+          upiId: upiId,
+          hashedPin: hashedPin
+        }
       });
       
       // Update balance state
       setBalance(response.data.balance);
+      setBalanceLoaded(true);
       
       toast({
         title: "Balance Updated",
@@ -141,9 +147,15 @@ const Dashboard = () => {
       
       // Extract error message if available
       let errorMessage = "Failed to fetch balance";
-      if (axios.isAxiosError(error) && error.response) {
-        if (error.response.data && error.response.data.error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.data?.error) {
           errorMessage = error.response.data.error;
+        } else if (error.response?.status === 401) {
+          errorMessage = "Invalid PIN";
+        } else if (error.response?.status === 404) {
+          errorMessage = "User not found";
+        } else if (!error.response) {
+          errorMessage = "Network error. Please check your connection.";
         }
       }
       
@@ -245,7 +257,11 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">{t.availableBalance}</p>
             <div className="flex items-center gap-2">
-              <p className="text-2xl font-bold">₹{balance}</p>
+              {balanceLoaded ? (
+                <p className="text-2xl font-bold">₹{balance}</p>
+              ) : (
+                <p className="text-2xl font-bold">•••••</p>
+              )}
               <Button 
                 variant="ghost" 
                 size="icon" 

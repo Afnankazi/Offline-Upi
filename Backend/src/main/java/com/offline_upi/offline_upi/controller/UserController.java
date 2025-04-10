@@ -16,7 +16,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
+@CrossOrigin(origins = {
+    "http://localhost:5173", 
+    "http://192.168.0.6:5173", 
+    "http://127.0.0.1:5173",
+    "https://c137-203-194-96-188.ngrok-free.app",
+    "https://offline-e0zat60ic-afnankazis-projects.vercel.app",
+    "https://abc123def456.ngrok.io"
+}, allowCredentials = "true", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class UserController {
     @Autowired
     private UserService userService;
@@ -50,7 +57,14 @@ public class UserController {
     }
 
     @GetMapping("/Balance")
-    public ResponseEntity<Map<String, String>> getBalance(@RequestBody User user) {
+    public ResponseEntity<Map<String, String>> getBalance(
+            @RequestParam String upiId,
+            @RequestParam String hashedPin) {
+        
+        User user = new User();
+        user.setUpiId(upiId);
+        user.setHashedPin(hashedPin);
+        
         String balance = userService.getBalance(user);
         Map<String, String> response = new HashMap<>();
         response.put("balance", balance);

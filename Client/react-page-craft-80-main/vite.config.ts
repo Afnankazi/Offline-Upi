@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "0.0.0.0", // ✅ Crucial for tunneling
+    host: "0.0.0.0", // Allow access from other devices on the network
     port: 5173,
   },
   plugins: [

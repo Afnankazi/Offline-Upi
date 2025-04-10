@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { QrReader } from 'react-qr-reader';
-import { ChevronLeft, Home } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
+import { ChevronLeft, Home, Camera, CameraOff } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,192 +12,231 @@ const QRCodeScanner = () => {
   const { toast } = useToast();
   const [data, setData] = useState('');
   const [scanning, setScanning] = useState(true);
-  const [currentStep, setCurrentStep] = useState('scanning'); // 'scanning', 'amount-input', 'pin-confirmation'
+  const [currentStep, setCurrentStep] = useState('scanning');
   const [amount, setAmount] = useState('');
+  const [upiId, setUpiId] = useState('');
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const qrCodeScannerRef = useRef<Html5Qrcode | null>(null);
+  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleScan = (result: any) => {
-    if (result) {
-      setData(result?.text);
+  // Function to start the camera
+  const startCamera = async () => {
+    if (qrCodeScannerRef.current) {
+      try {
+        // Stop any existing camera session
+        await qrCodeScannerRef.current.stop();
+      } catch (error) {
+        console.error("Error stopping previous camera session:", error);
+      }
+    }
+
+    try {
+      // Create a new instance of Html5Qrcode
+      const html5QrCode = new Html5Qrcode("qr-reader");
+      qrCodeScannerRef.current = html5QrCode;
+
+      // Start the camera with optimized settings
+      await html5QrCode.start(
+        { 
+          facingMode: "environment",
+          // focusMode: "continuous" // Helps with focus stability
+        },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          disableFlip: false,
+          videoConstraints: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        },
+        (decodedText) => {
+          // Clear any existing timeout
+          if (scanTimeoutRef.current) {
+            clearTimeout(scanTimeoutRef.current);
+          }
+
+          // Set a timeout to prevent multiple rapid scans
+          scanTimeoutRef.current = setTimeout(() => {
+            handleSuccessfulScan(decodedText, html5QrCode);
+          }, 500);
+        },
+        (errorMessage) => {
+          // Only show error if it's not a common scanning error
+          if (!errorMessage.includes("QR code parse error")) {
+            console.error("QR Scanner error:", errorMessage);
+            setCameraError("Camera access error: " + errorMessage);
+            toast({
+              title: "Camera Error",
+              description: "Could not access camera. Please check permissions.",
+              variant: "destructive",
+            });
+          }
+        }
+      );
+      
+      setIsCameraActive(true);
+      setCameraError(null);
+    } catch (err) {
+      console.error("Error starting camera:", err);
+      setCameraError("Failed to start camera: " + (err instanceof Error ? err.message : String(err)));
+      setIsCameraActive(false);
+    }
+  };
+
+  // Function to handle successful scan
+  const handleSuccessfulScan = async (decodedText: string, scanner: Html5Qrcode) => {
+    try {
+      // Stop the scanner
+      await scanner.stop();
+      setIsCameraActive(false);
       setScanning(false);
+      
+      // Extract UPI ID from the QR code
+      let extractedUpiId = decodedText;
+      
+      // If it's a URL, try to extract the UPI ID
+      if (decodedText.includes('upi://')) {
+        try {
+          const urlParams = new URLSearchParams(decodedText.replace('upi://', ''));
+          extractedUpiId = urlParams.get('pa') || decodedText;
+        } catch (parseError) {
+          console.error("Error parsing UPI URL:", parseError);
+          // Fall back to the original text if parsing fails
+        }
+      }
+      
+      // Store the UPI ID
+      setUpiId(extractedUpiId);
+      
+      // Show success message
       toast({
-        title: "QR Code Detected",
-        description: `Code Scanned Successfully`,
+        title: "QR Code Scanned",
+        description: `UPI ID: ${extractedUpiId}`,
       });
       
-      // Show amount input screen instead of PIN confirmation
-      setCurrentStep('amount-input');
+      // Redirect to transfer page with the UPI ID
+      navigate('/transfer', { 
+        state: { 
+          upiId: extractedUpiId,
+          fromQR: true
+        } 
+      });
+    } catch (error) {
+      console.error("Error handling scan result:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process QR code. Please try again.",
+        variant: "destructive",
+      });
+      // Restart the camera
+      startCamera();
     }
   };
 
-  const handleError = (error: any) => {
-    console.error(error);
-    toast({
-      title: "Error",
-      description: "Could not access camera",
-      variant: "destructive",
-    });
-  };
+  // Initialize camera on component mount
+  useEffect(() => {
+    // Check if browser supports getUserMedia
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError("Your browser doesn't support camera access. Please try a different browser.");
+      return;
+    }
+
+    // Start the camera
+    startCamera();
+
+    // Cleanup on unmount
+    return () => {
+      if (scanTimeoutRef.current) {
+        clearTimeout(scanTimeoutRef.current);
+      }
+      
+      if (qrCodeScannerRef.current) {
+        try {
+          qrCodeScannerRef.current.stop();
+        } catch (error) {
+          console.error("Error stopping scanner:", error);
+        }
+      }
+    };
+  }, []);
 
   const handleBack = () => {
-    if (currentStep === 'amount-input') {
-      // Go back to scanning
-      setScanning(true);
-      setCurrentStep('scanning');
-    } else if (currentStep === 'pin-confirmation') {
-      // Go back to amount input
-      setCurrentStep('amount-input');
+    navigate(-1);
+  };
+
+  const handleRetry = () => {
+    setCameraError(null);
+    setScanning(true);
+    startCamera();
+  };
+
+  const toggleCamera = async () => {
+    if (isCameraActive && qrCodeScannerRef.current) {
+      try {
+        await qrCodeScannerRef.current.stop();
+        setIsCameraActive(false);
+      } catch (error) {
+        console.error("Error stopping camera:", error);
+      }
     } else {
-      navigate(-1);
+      startCamera();
     }
-  };
-
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow numbers with up to 2 decimal places
-    const value = e.target.value;
-    const regex = /^\d*\.?\d{0,2}$/;
-    
-    if (regex.test(value) || value === '') {
-      setAmount(value);
-    }
-  };
-
-  const handleContinue = () => {
-    if (currentStep === 'amount-input' && amount.trim()) {
-      setCurrentStep('pin-confirmation');
-    }
-  };
-
-  const handlePinCancel = () => {
-    setCurrentStep('amount-input');
-  };
-
-  const handlePinConfirm = () => {
-    toast({
-      title: "Payment Confirmed",
-      description: "Your transaction has been processed successfully",
-    });
-    
-    // Navigate to dashboard after successful confirmation
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 1500);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-teal-800">
-      {currentStep === 'pin-confirmation' ? (
-        <PinConfirmation 
-          onCancel={handlePinCancel}
-          onConfirm={handlePinConfirm}
-        />
-      ) : currentStep === 'amount-input' ? (
-        <div className="fixed inset-0 bg-white flex flex-col z-50">
-          {/* Header */}
-          <header className="flex items-center px-4 py-3 border-b">
-            <button onClick={handleBack} className="text-gray-700">
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <h1 className="ml-4 text-lg font-medium text-gray-800">Enter Amount</h1>
-          </header>
+      {/* Header */}
+      <header className="flex items-center justify-between px-4 py-3 bg-teal-900">
+        <button onClick={handleBack} className="text-white">
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <h1 className="text-lg font-medium text-white">Scan QR Code</h1>
+        <button onClick={() => navigate('/dashboard')} className="text-white">
+          <Home className="h-6 w-6" />
+        </button>
+      </header>
 
-          {/* Content */}
-          <div className="flex-1 flex flex-col p-6">
-            <h2 className="text-xl font-medium text-gray-800 mb-2">Enter Amount</h2>
-            <p className="text-gray-500 text-sm mb-6">
-              How much would you like to send?
-            </p>
-
-            {/* Amount Input Field */}
-            <div className="mb-8">
-              <div className="flex items-center bg-seva-cream rounded-lg p-4 mb-6">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-500 mb-1">Amount</p>
-                  <div className="flex items-center">
-                    <span className="text-gray-700 mr-2 text-xl">₹</span>
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={amount}
-                      onChange={handleAmountChange}
-                      className="border-none bg-transparent text-3xl font-bold text-gray-800 p-0 focus-visible:ring-0 h-auto"
-                      placeholder="0.00"
-                      autoFocus
-                    />
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 text-center">
-                Transfer fee: <span className="font-semibold">Free</span>
-              </p>
-            </div>
-
-            {/* Continue Button */}
-            <Button
-              onClick={handleContinue}
-              disabled={!amount.trim()}
-              className="w-full bg-seva-green hover:bg-green-600 text-white py-6 rounded-md text-lg mt-auto"
-            >
-              Continue
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Header */}
-          <header className="flex items-center justify-between px-4 py-3">
-            <button onClick={handleBack} className="text-white">
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <h1 className="text-white text-lg font-medium">Scan to Pay</h1>
-            <div className="w-6"></div> {/* Placeholder for right side alignment */}
-          </header>
-
-          {/* Scanner Area */}
-          <div className="flex-1 flex flex-col items-center justify-center px-4 relative">
-            <div className="relative w-full max-w-xs aspect-square">
-              {/* Scanner Border Effect */}
-              <div className="absolute inset-0 border-2 border-white/30 rounded-lg">
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-green-400"></div>
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-green-400"></div>
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-green-400"></div>
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-green-400"></div>
-              </div>
-
-              {scanning ? (
-                <div className="overflow-hidden rounded-lg w-full h-full">
-                  <QrReader
-                    constraints={{ facingMode: 'environment' }}
-                    onResult={handleScan}
-                    className="w-full h-full"
-                  />
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg w-full h-full flex items-center justify-center">
-                  <p className="text-green-500 font-bold">QR Code Detected!</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Instructions */}
-          <div className="bg-white rounded-t-2xl p-6 pb-20">
-            <h2 className="text-center font-semibold text-lg mb-2">Payment with QR Code</h2>
-            <p className="text-center text-gray-500 text-sm">
-              Hold the code inside the frame, it will be scanned automatically
-            </p>
-            
-            {/* Bottom navigation for mobile - simplified */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white py-3 px-6 flex justify-center">
-              <Button 
-                onClick={() => navigate('/dashboard')} 
-                className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center shadow-md"
-              >
-                <Home className="h-6 w-6 text-white" />
+      {/* Scanner Container */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-md">
+          {cameraError ? (
+            <div className="text-center p-4">
+              <p className="text-red-500 mb-4">{cameraError}</p>
+              <Button onClick={handleRetry} className="bg-teal-600 hover:bg-teal-700">
+                Retry Camera Access
               </Button>
             </div>
-          </div>
-        </>
-      )}
+          ) : (
+            <>
+              <div id="qr-reader" className="w-full relative"></div>
+              <div className="flex justify-center mt-4">
+                <Button 
+                  onClick={toggleCamera} 
+                  className={`${isCameraActive ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-600 hover:bg-teal-700'} text-white`}
+                >
+                  {isCameraActive ? (
+                    <>
+                      <CameraOff className="h-4 w-4 mr-2" />
+                      Stop Camera
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="h-4 w-4 mr-2" />
+                      Start Camera
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-center mt-4 text-gray-600">
+                Position the QR code within the frame to scan
+              </p>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

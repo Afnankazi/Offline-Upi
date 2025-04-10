@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Send } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,11 +11,24 @@ import { sendTransactionSMS } from '@/utils/twilioService';
 
 const UpiTransfer = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [upiId, setUpiId] = useState('');
   const [amount, setAmount] = useState('');
   const [currentStep, setCurrentStep] = useState('upi-input'); // 'upi-input', 'amount-input', 'pin-confirmation'
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Check if we have UPI ID from QR scanner
+  useEffect(() => {
+    if (location.state && location.state.upiId) {
+      setUpiId(location.state.upiId);
+      
+      // If coming from QR scanner, go directly to amount input
+      if (location.state.fromQR) {
+        setCurrentStep('amount-input');
+      }
+    }
+  }, [location]);
   
   const handleBack = () => {
     if (currentStep === 'amount-input') {
@@ -45,6 +58,16 @@ const UpiTransfer = () => {
     try {
       // Get the sender's UPI ID from localStorage
       const senderUpiId = localStorage.getItem('upiId');
+      
+      // Check if sender UPI ID exists
+      if (!senderUpiId) {
+        toast({
+          title: "Error",
+          description: "Please log in to make a transfer",
+          variant: "destructive"
+        });
+        return;
+      }
       
       // Create the transaction object
       const transactionData = {

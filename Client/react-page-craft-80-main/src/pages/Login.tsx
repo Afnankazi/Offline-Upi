@@ -7,8 +7,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff } from 'lucide-react';
 import Logo from '@/components/Logo';
-import axios from 'axios';
 import { SHA256 } from 'crypto-js';
+import axiosInstance from '@/utils/axios';
+import { AxiosError } from 'axios';
 
 const Login = () => {
   const [upiId, setUpiId] = useState('');
@@ -28,7 +29,7 @@ const Login = () => {
       const hashedPin = SHA256(pin).toString();
       
       // Send validation request to backend
-      const response = await axios.post('http://localhost:8080/api/users/validate', {
+      const response = await axiosInstance.post('/api/users/validate', {
         upiId: upiId,
         hashedPin: hashedPin
       });
@@ -57,9 +58,15 @@ const Login = () => {
       
       // Extract error message if available
       let errorMessage = "Invalid UPI ID or PIN";
-      if (axios.isAxiosError(error) && error.response) {
-        if (error.response.data && error.response.data.error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.data?.error) {
           errorMessage = error.response.data.error;
+        } else if (error.response?.status === 404) {
+          errorMessage = "User not found";
+        } else if (error.response?.status === 401) {
+          errorMessage = "Invalid credentials";
+        } else if (!error.response) {
+          errorMessage = "Network error. Please check your connection.";
         }
       }
       

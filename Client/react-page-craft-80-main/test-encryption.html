@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Encryption Test</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+  <script>
+    // Constants matching the Java implementation
+    const ALGORITHM = 'AES';
+    const TRANSFORMATION = 'AES/ECB/PKCS5Padding';
+    const SECRET_KEY = 'K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=';
+
+    // Test JSON string
+    const testJson = `{
+        "sender": {
+            "upiId": "afu@sbi"
+        },
+        "receiverUpi": "afnan@axl",
+        "amount": 500.00,
+        "transactionType": "DEBIT"
+    }`;
+
+    // Compress function
+    function compress(data) {
+      // Convert string to Uint8Array
+      const textEncoder = new TextEncoder();
+      const dataBytes = textEncoder.encode(data);
+      
+      // Compress using pako (GZIP)
+      return pako.gzip(dataBytes);
+    }
+
+    // Decompress function
+    function decompress(compressedData) {
+      // Decompress using pako (GZIP)
+      const decompressedBytes = pako.ungzip(compressedData);
+      
+      // Convert back to string
+      const textDecoder = new TextDecoder();
+      return textDecoder.decode(decompressedBytes);
+    }
+
+    // Encrypt function
+    function encrypt(data) {
+      // Convert the Base64 secret key to WordArray
+      const key = CryptoJS.enc.Base64.parse(SECRET_KEY);
+      
+      // Convert Uint8Array to WordArray
+      const wordArray = CryptoJS.lib.WordArray.create(data);
+      
+      // Encrypt the data
+      const encrypted = CryptoJS.AES.encrypt(wordArray, key, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      
+      // Return URL-safe Base64 without padding
+      return encrypted.toString()
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+    }
+
+    // Decrypt function
+    function decrypt(encryptedText) {
+      // Convert the Base64 secret key to WordArray
+      const key = CryptoJS.enc.Base64.parse(SECRET_KEY);
+      
+      // Convert from URL-safe Base64 back to normal
+      const normalizedBase64 = encryptedText
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+      
+      // Add padding if needed
+      let paddedBase64 = normalizedBase64;
+      const padding = 4 - (normalizedBase64.length % 4);
+      if (padding < 4) {
+        paddedBase64 += '='.repeat(padding);
+      }
+      
+      // Decrypt the data
+      const decrypted = CryptoJS.AES.decrypt(paddedBase64, key, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      
+      // Convert WordArray to Uint8Array
+      const words = decrypted.words;
+      const sigBytes = decrypted.sigBytes;
+      const u8 = new Uint8Array(sigBytes);
+      
+      for (let i = 0; i < sigBytes; i++) {
+        const byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+        u8[i] = byte;
+      }
+      
+      return u8;
+    }
+
+    // Compress and encrypt
+    function compressAndEncrypt(plainText) {
+      // First compress
+      const compressed = compress(plainText);
+      
+      // Then encrypt
+      return encrypt(compressed);
+    }
+
+    // Decrypt and decompress
+    function decryptAndDecompress(encryptedText) {
+      // First decrypt
+      const decrypted = decrypt(encryptedText);
+      
+      // Then decompress
+      return decompress(decrypted);
+    }
+
+    // Run the test
+    window.onload = function() {
+      // Compress and encrypt
+      const encrypted = compressAndEncrypt(testJson);
+      document.getElementById('encrypted').textContent = encrypted;
+      
+      // Decrypt and decompress
+      const decrypted = decryptAndDecompress(encrypted);
+      document.getElementById('decrypted').textContent = decrypted;
+      
+      // Verify they match
+      const verification = testJson === decrypted ? "SUCCESS" : "FAILED";
+      document.getElementById('verification').textContent = verification;
+    };
+  </script>
+</head>
+<body>
+  <h1>Encryption Test</h1>
+  <h2>Original JSON:</h2>
+  <pre id="original"></pre>
+  <h2>Encrypted:</h2>
+  <pre id="encrypted"></pre>
+  <h2>Decrypted:</h2>
+  <pre id="decrypted"></pre>
+  <h2>Verification:</h2>
+  <pre id="verification"></pre>
+  
+  <script>
+    document.getElementById('original').textContent = testJson;
+  </script>
+</body>
+</html> 

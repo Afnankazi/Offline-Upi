@@ -1,67 +1,52 @@
 import CryptoJS from 'crypto-js';
+import pako from 'pako';
 
 // Constants matching the Java implementation
 const ALGORITHM = 'AES';
+const TRANSFORMATION = 'AES/ECB/PKCS5Padding';
 const SECRET_KEY = 'K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=';
 
 /**
- * Compress a string using a simple compression algorithm
- * This is a simplified version of GZIP compression
+ * Compress data using GZIP (matching Java's GZIPOutputStream)
  */
-export const compress = (data: string): string => {
-  // Simple compression: replace repeated characters with count
-  let compressed = '';
-  let count = 1;
-  let currentChar = data[0];
+export const compress = (data: string): Uint8Array => {
+  // Convert string to Uint8Array
+  const textEncoder = new TextEncoder();
+  const dataBytes = textEncoder.encode(data);
   
-  for (let i = 1; i < data.length; i++) {
-    if (data[i] === currentChar && count < 9) {
-      count++;
-    } else {
-      compressed += count + currentChar;
-      currentChar = data[i];
-      count = 1;
-    }
-  }
-  
-  // Add the last group
-  compressed += count + currentChar;
-  
-  return compressed;
+  // Compress using pako (GZIP)
+  return pako.gzip(dataBytes);
 };
 
 /**
- * Decompress a string that was compressed with the compress function
+ * Decompress GZIP data (matching Java's GZIPInputStream)
  */
-export const decompress = (compressedData: string): string => {
-  let decompressed = '';
+export const decompress = (compressedData: Uint8Array): string => {
+  // Decompress using pako (GZIP)
+  const decompressedBytes = pako.ungzip(compressedData);
   
-  for (let i = 0; i < compressedData.length; i += 2) {
-    const count = parseInt(compressedData[i]);
-    const char = compressedData[i + 1];
-    
-    for (let j = 0; j < count; j++) {
-      decompressed += char;
-    }
-  }
-  
-  return decompressed;
+  // Convert back to string
+  const textDecoder = new TextDecoder();
+  return textDecoder.decode(decompressedBytes);
 };
 
 /**
- * Encrypt data using AES
+ * Encrypt data using AES (matching Java's AES/ECB/PKCS5Padding)
  */
-export const encrypt = (data: string): string => {
+export const encrypt = (data: Uint8Array): string => {
   // Convert the Base64 secret key to WordArray
   const key = CryptoJS.enc.Base64.parse(SECRET_KEY);
   
+  // Convert Uint8Array to WordArray
+  const wordArray = CryptoJS.lib.WordArray.create(data);
+  
   // Encrypt the data
-  const encrypted = CryptoJS.AES.encrypt(data, key, {
+  const encrypted = CryptoJS.AES.encrypt(wordArray, key, {
     mode: CryptoJS.mode.ECB,
     padding: CryptoJS.pad.Pkcs7
   });
   
-  // Return URL-safe Base64 without padding
+  // Return URL-safe Base64 without padding (matching Java's Base64.getUrlEncoder().withoutPadding())
   return encrypted.toString()
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -69,9 +54,9 @@ export const encrypt = (data: string): string => {
 };
 
 /**
- * Decrypt data using AES
+ * Decrypt data using AES (matching Java's AES/ECB/PKCS5Padding)
  */
-export const decrypt = (encryptedText: string): string => {
+export const decrypt = (encryptedText: string): Uint8Array => {
   // Convert the Base64 secret key to WordArray
   const key = CryptoJS.enc.Base64.parse(SECRET_KEY);
   
@@ -93,11 +78,21 @@ export const decrypt = (encryptedText: string): string => {
     padding: CryptoJS.pad.Pkcs7
   });
   
-  return decrypted.toString(CryptoJS.enc.Utf8);
+  // Convert WordArray to Uint8Array
+  const words = decrypted.words;
+  const sigBytes = decrypted.sigBytes;
+  const u8 = new Uint8Array(sigBytes);
+  
+  for (let i = 0; i < sigBytes; i++) {
+    const byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+    u8[i] = byte;
+  }
+  
+  return u8;
 };
 
 /**
- * Compress and encrypt data
+ * Compress and encrypt data (matching Java's compressAndEncrypt)
  */
 export const compressAndEncrypt = (plainText: string): string => {
   // First compress
@@ -108,7 +103,7 @@ export const compressAndEncrypt = (plainText: string): string => {
 };
 
 /**
- * Decrypt and decompress data
+ * Decrypt and decompress data (matching Java's decryptAndDecompress)
  */
 export const decryptAndDecompress = (encryptedText: string): string => {
   // First decrypt

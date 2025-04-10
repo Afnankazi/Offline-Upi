@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.List;
 
@@ -21,6 +23,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @RequestMapping("/api/transactions")
 @RestController
+@CrossOrigin(origins = {
+    "http://localhost:5173", 
+    "http://192.168.0.6:5173", 
+    "http://127.0.0.1:5173",
+    "https://c137-203-194-96-188.ngrok-free.app",
+    "https://offline-e0zat60ic-afnankazis-projects.vercel.app"
+}, allowCredentials = "true", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class TransactionController {
 
     @Autowired

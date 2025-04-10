@@ -14,6 +14,9 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
+import { API_BASE_URL } from '@/config';
+import axiosInstance from '@/utils/axios';
+import { AxiosError } from 'axios';
 
 const registerFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -71,12 +74,16 @@ const Register = () => {
       console.log("Sending data to API:", userData);
       
       // Make the POST request to the API
-      const response = await axios.post('http://localhost:8080/api/users', userData);
+      const response = await axiosInstance.post('/api/users', userData);
       
       console.log("API Response:", response.data);
       
       // Save all form data to localStorage for profile access
-    
+      localStorage.setItem('name', data.name);
+      localStorage.setItem('upiId', data.upiId);
+      localStorage.setItem('email', data.email);
+      localStorage.setItem('phoneNumber', data.phoneNumber);
+      localStorage.setItem('userPin', data.pin);
       
       toast({
         title: "Account created",
@@ -90,19 +97,22 @@ const Register = () => {
     } catch (error) {
       console.error("Registration error:", error);
       
-      // Extract error message from response if available
-      let errorMessage = "There was an error creating your account. Please try again.";
-      if (axios.isAxiosError(error) && error.response) {
-        console.log("Error response data:", error.response.data);
-        if (error.response.data && error.response.data.message) {
-          errorMessage = error.response.data.message;
+      // Extract error message if available
+      let errorMessage = "Failed to create account";
+      if (error instanceof AxiosError) {
+        if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.response?.status === 409) {
+          errorMessage = "UPI ID already exists";
+        } else if (!error.response) {
+          errorMessage = "Network error. Please check your connection.";
         }
       }
       
       toast({
-        title: "Registration failed",
+        title: "Registration Failed",
         description: errorMessage,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
