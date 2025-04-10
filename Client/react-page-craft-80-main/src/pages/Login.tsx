@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,41 +17,93 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUpiIdFocused, setIsUpiIdFocused] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const pinInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Check for remembered UPI ID on component mount
+  useEffect(() => {
+    const rememberedUpiId = localStorage.getItem('rememberedUpiId');
+    if (rememberedUpiId) {
+      setUpiId(rememberedUpiId);
+      setRememberMe(true);
+      // Focus on PIN input after a short delay
+      setTimeout(() => {
+        if (pinInputRef.current) {
+          pinInputRef.current.focus();
+        }
+      }, 300);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      // Hash the PIN using SHA-256 (same as in registration)
+      // Hash the PIN using SHA-256
       const hashedPin = SHA256(pin).toString();
       
-      // Send validation request to backend
-      const response = await axiosInstance.post('/api/users/validate', {
-        upiId: upiId,
-        hashedPin: hashedPin
-      });
+      // Check if we have stored credentials for this UPI ID
+      const storedUpiId = localStorage.getItem('upiId');
+      const storedHashedPin = localStorage.getItem('hashedPin');
+      const storedName = localStorage.getItem('name');
       
-      // If login is successful
-      if (response.status === 200) {
-        const userData = response.data;
-        
-        // Store user data in localStorage
-        localStorage.setItem('name', userData.name);
-        localStorage.setItem('upiId', userData.upiId);
-        localStorage.setItem('email', userData.email);
-        localStorage.setItem('phoneNumber', userData.phoneNumber);
-        localStorage.setItem('userPin', pin); // Store original PIN for future use
-        
-        toast({
-          title: "Login Successful",
-          description: `Welcome back, ${userData.name}!`,
+      // If we have stored credentials and the UPI ID matches
+      if (storedUpiId === upiId && storedHashedPin) {
+        // Validate locally
+        if (hashedPin === storedHashedPin) {
+          // Save or remove remembered UPI ID based on checkbox
+          if (rememberMe) {
+            localStorage.setItem('rememberedUpiId', upiId);
+          } else {
+            localStorage.removeItem('rememberedUpiId');
+          }
+          
+          toast({
+            title: "Login Successful",
+            description: `Welcome back, ${storedName}!`,
+          });
+          
+          // Navigate to dashboard after login
+          navigate('/dashboard');
+        } else {
+          throw new Error("Invalid PIN");
+        }
+      } else {
+        // First time login or different UPI ID - validate with server
+        const response = await axiosInstance.post('/api/users/validate', {
+          upiId: upiId,
+          hashedPin: hashedPin
         });
         
-        // Navigate to dashboard after login
-        navigate('/dashboard');
+        if (response.status === 200) {
+          const userData = response.data;
+          
+          // Store user data in localStorage
+          localStorage.setItem('name', userData.name);
+          localStorage.setItem('upiId', userData.upiId);
+          localStorage.setItem('email', userData.email);
+          localStorage.setItem('phoneNumber', userData.phoneNumber);
+          localStorage.setItem('userPin', pin); // Store original PIN for future use
+          localStorage.setItem('hashedPin', hashedPin); // Store hashed PIN for local validation
+          
+          // Save or remove remembered UPI ID based on checkbox
+          if (rememberMe) {
+            localStorage.setItem('rememberedUpiId', upiId);
+          } else {
+            localStorage.removeItem('rememberedUpiId');
+          }
+          
+          toast({
+            title: "Login Successful",
+            description: `Welcome back, ${userData.name}!`,
+          });
+          
+          // Navigate to dashboard after login
+          navigate('/dashboard');
+        }
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -68,6 +120,8 @@ const Login = () => {
         } else if (!error.response) {
           errorMessage = "Network error. Please check your connection.";
         }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
       
       toast({
@@ -117,6 +171,9 @@ const Login = () => {
                 onChange={(e) => setUpiId(e.target.value)}
                 placeholder="username@bankname"
                 required
+                onFocus={() => setIsUpiIdFocused(true)}
+                onBlur={() => setIsUpiIdFocused(false)}
+                className={isUpiIdFocused ? "ring-2 ring-seva-green" : ""}
               />
             </div>
 
@@ -125,6 +182,7 @@ const Login = () => {
               <div className="relative">
                 <Input 
                   id="pin"
+                  ref={pinInputRef}
                   type={showPin ? "text" : "password"}
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
@@ -133,6 +191,7 @@ const Login = () => {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   required
+                  className="pr-10"
                 />
                 <button 
                   type="button"
@@ -155,7 +214,7 @@ const Login = () => {
                   htmlFor="rememberMe" 
                   className="text-sm cursor-pointer"
                 >
-                  Remember me
+                  Remember UPI ID
                 </Label>
               </div>
               

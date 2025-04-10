@@ -1,6 +1,7 @@
 package com.offline_upi.offline_upi.service;
 
 import com.offline_upi.offline_upi.model.User;
+import com.offline_upi.offline_upi.model.Transaction;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,4 +16,5 @@ public interface UserService {
     // boolean verifyPin(String upiId, String pin);
     boolean existsByUpiId(String upiId);
     boolean existsByPhoneNumber(String phoneNumber);
+    List<Transaction> getHistory(String upiId, String hashedPin);
 } 

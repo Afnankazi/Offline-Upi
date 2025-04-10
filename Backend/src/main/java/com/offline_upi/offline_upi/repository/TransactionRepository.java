@@ -15,4 +15,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Page<Transaction> findBySenderUpiId(String senderUpiId, Pageable pageable);
     List<Transaction> findByStatus(Transaction.TransactionStatus status);
     List<Transaction> findBySenderUpiIdAndStatus(String senderUpiId, Transaction.TransactionStatus status);
+    List<Transaction> findByReceiverUpi(String receiverUpi);
 } 

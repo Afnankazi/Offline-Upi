@@ -114,7 +114,12 @@ public class TransactionServiceImpl implements TransactionService {
         mailUtil.sendCreditNotification(receiver.getEmail(), sender.getUpiId(), savedTransaction.getAmount().toString(), savedTransaction.getTransactionId().toString());
         mailUtil.sendTransactionConfirmation(sender.getEmail(), savedTransaction.getTransactionId().toString(), savedTransaction.getAmount().toString(), receiver.getUpiId());
         
-        return savedTransaction;
+        // Update transaction status to COMPLETED after sending emails
+        savedTransaction.setStatus(Transaction.TransactionStatus.COMPLETED);
+        savedTransaction.setCompletedAt(LocalDateTime.now());
+        
+        // Save the updated transaction
+        return transactionRepository.save(savedTransaction);
     }
 
     @Override

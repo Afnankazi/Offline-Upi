@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, EyeOff, Calendar, Save } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Calendar, Save, LogOut } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,6 +31,7 @@ const Profile = () => {
   const { toast } = useToast();
   const [showPin, setShowPin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Initialize form
   const form = useForm<ProfileFormValues>({
@@ -118,6 +118,29 @@ const Profile = () => {
         setIsLoading(false);
       }
     }, 1000);
+  };
+
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    
+    // Clear all user data from localStorage
+    localStorage.removeItem('firstName');
+    localStorage.removeItem('lastName');
+    localStorage.removeItem('email');
+    localStorage.removeItem('birthDate');
+    localStorage.removeItem('upiId');
+    localStorage.removeItem('phoneNumber');
+    localStorage.removeItem('userPin');
+    localStorage.removeItem('name');
+    
+    // Show success message
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of your account.",
+    });
+    
+    // Navigate to login page
+    navigate('/login');
   };
 
   return (
@@ -332,6 +355,27 @@ const Profile = () => {
                   <div className="flex items-center justify-center">
                     <Save className="w-4 h-4 mr-2" />
                     Update Profile
+                  </div>
+                )}
+              </Button>
+              
+              {/* Logout Button */}
+              <Button 
+                type="button" 
+                variant="outline"
+                className="w-full border-red-500 text-red-500 hover:bg-red-50"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-red-500 rounded-full"></div>
+                    Logging out...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
                   </div>
                 )}
               </Button>

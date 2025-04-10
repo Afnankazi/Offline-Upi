@@ -1,7 +1,9 @@
 package com.offline_upi.offline_upi.service.impl;
 
 import com.offline_upi.offline_upi.model.User;
+import com.offline_upi.offline_upi.model.Transaction;
 import com.offline_upi.offline_upi.repository.UserRepository;
+import com.offline_upi.offline_upi.repository.TransactionRepository;
 import com.offline_upi.offline_upi.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,6 +20,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private TransactionRepository transactionRepository;
 
 
     @Override
@@ -91,5 +96,29 @@ public class UserServiceImpl implements UserService {
         }
         
         return foundUser.getBalance().toString();
+    }
+    
+    @Override
+    public List<Transaction> getHistory(String upiId, String hashedPin) {
+        // Validate user exists and PIN is correct
+        User user = userRepository.findByUpiId(upiId)
+                .orElseThrow(() -> new IllegalArgumentException("User with UPI ID " + upiId + " not found"));
+        
+        if (!user.getHashedPin().equals(hashedPin)) {
+            throw new IllegalArgumentException("Invalid PIN");
+        }
+        
+        // Get all transactions where the user is either the sender or receiver
+        List<Transaction> sentTransactions = transactionRepository.findBySenderUpiId(upiId);
+        List<Transaction> receivedTransactions = transactionRepository.findByReceiverUpi(upiId);
+        
+        // Combine and sort transactions by initiatedAt in descending order (newest first)
+        List<Transaction> allTransactions = sentTransactions;
+        allTransactions.addAll(receivedTransactions);
+        
+        // Sort by initiatedAt in descending order
+        allTransactions.sort((t1, t2) -> t2.getInitiatedAt().compareTo(t1.getInitiatedAt()));
+        
+        return allTransactions;
     }
 }

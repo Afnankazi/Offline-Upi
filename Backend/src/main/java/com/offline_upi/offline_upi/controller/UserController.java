@@ -1,6 +1,7 @@
 package com.offline_upi.offline_upi.controller;
 
 import com.offline_upi.offline_upi.model.User;
+import com.offline_upi.offline_upi.model.Transaction;
 import com.offline_upi.offline_upi.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
     "http://192.168.0.6:5173", 
     "http://127.0.0.1:5173",
     "https://c137-203-194-96-188.ngrok-free.app",
-    "https://offline-e0zat60ic-afnankazis-projects.vercel.app",
+    "https://offline-upi-cleint.vercel.app",
     "https://abc123def456.ngrok.io"
 }, allowCredentials = "true", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class UserController {
@@ -104,6 +105,36 @@ public class UserController {
                     error.put("error", "User not found");
                     return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
                 });
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getHistory(
+            @RequestParam String upiId,
+            @RequestParam String hashedPin) {
+        
+        try {
+            List<Transaction> transactions = userService.getHistory(upiId, hashedPin);
+            return ResponseEntity.ok(transactions);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            
+            if (e.getMessage().contains("Invalid PIN")) {
+                return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+            } else if (e.getMessage().contains("not found")) {
+                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+            } else {
+                return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            }
+        }
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<Map<String, String>> testEndpoint() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "OK");
+        response.put("message", "User API is working correctly");
+        return ResponseEntity.ok(response);
     }
 
     // @PostMapping("/{upiId}/verify-pin")
