@@ -17,6 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                     clientUrl,
                     "http://192.168.0.6:5173",
+                    "http://localhost:5173",
                     "http://127.0.0.1:5173",
                     "https://7600-103-58-153-95.ngrok-free.app",
                     "https://offline-e0zat60ic-afnankazis-projects.vercel.app"

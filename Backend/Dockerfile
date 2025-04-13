@@ -9,4 +9,5 @@ RUN mvn clean package
 ## 5. Define the command to run when the container starts.
 EXPOSE 8080
 
+
 CMD ["java", "-jar", "target/offline-upi-0.0.1-SNAPSHOT.jar"]

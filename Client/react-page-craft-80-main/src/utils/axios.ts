@@ -1,13 +1,11 @@
 import axios from 'axios';
-import { API_BASE_URL } from '@/config';
 
 const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
+  baseURL: 'https://api.mediastack.com/v1',
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  }
+  },
+  withCredentials: false // Important: Set this to false for CORS
 });
 
 // Add a request interceptor

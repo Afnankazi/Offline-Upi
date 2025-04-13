@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -135,6 +136,47 @@ public class UserController {
         response.put("status", "OK");
         response.put("message", "User API is working correctly");
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/update-name")
+    public ResponseEntity<?> updateName(@RequestBody Map<String, String> updateData) {
+        try {
+            String upiId = updateData.get("upiId");
+            String name = updateData.get("name");
+
+            // Validate required fields
+            if (upiId == null || name == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "UPI ID and name are required");
+                return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            }
+
+            // Check if user exists
+            Optional<User> user = userService.getUserByUpiId(upiId);
+            if (user.isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User not found");
+                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+            }
+
+            // Update user name
+            User existingUser = user.get();
+            existingUser.setName(name);
+            
+            User updatedUser = userService.updateUser(existingUser);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Name updated successfully");
+            response.put("user", updatedUser);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to update name");
+            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // @PostMapping("/{upiId}/verify-pin")

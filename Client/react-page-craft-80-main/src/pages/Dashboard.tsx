@@ -28,6 +28,7 @@ import { SHA256 } from 'crypto-js';
 import { API_BASE_URL } from '@/config';
 import axiosInstance from '@/utils/axios';
 import { AxiosError } from 'axios';
+import BLog from './BLog';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -40,11 +41,27 @@ const Dashboard = () => {
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  const [news, setNews] = useState([]);
   // Fetch balance on component mount
   useEffect(() => {
-    // We can't fetch balance automatically since we need the PIN
-    // Balance will be fetched when user clicks the refresh button
+    const fetchBalance = async () => {
+      try {
+        const response = await axiosInstance.get('/news', {
+          params: {
+            access_key: '93074874edf9c762ce948a83830a3505',
+            sources: 'business',
+            limit: 5
+          }
+        });
+        if (response.data && response.data.data) {
+          setNews(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching news:", error);
+        setNews([]); // Set empty array on error
+      }
+    };
+    fetchBalance();
   }, []);
 
   const recentContacts = [
@@ -321,13 +338,12 @@ const Dashboard = () => {
         <section className="mb-6">
           <h2 className="text-base font-medium mb-3">{t.financeBlogs}</h2>
           <div className="space-y-3">
-            <div className="bg-teal-800 text-white p-4 rounded-lg flex justify-between items-center">
-              <div className="space-y-1 max-w-[60%]">
-                <h3 className="font-medium text-sm">{t.ladkiBahinTitle}</h3>
-                <p className="text-xs">{t.ladkiBahinDesc}</p>
-              </div>
-              <div className="w-16 h-16 bg-teal-600 rounded-full"></div>
-            </div>
+            {
+              news.map((item,index) => (
+                <BLog key={index} Title={item.title} Description={item.description} Url={item.url} />
+              ))
+            }
+            
             <div className="bg-orange-100 text-orange-800 p-4 rounded-lg">
               <h3 className="font-medium text-sm">{t.specialGuide}</h3>
               <p className="text-xs">{t.savingTips}</p>
