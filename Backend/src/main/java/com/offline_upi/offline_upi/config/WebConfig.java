@@ -20,7 +20,8 @@ public class WebConfig implements WebMvcConfigurer {
                     "http://localhost:5173",
                     "http://127.0.0.1:5173",
                     "https://7600-103-58-153-95.ngrok-free.app",
-                    "https://offline-e0zat60ic-afnankazis-projects.vercel.app"
+                    "https://offline-e0zat60ic-afnankazis-projects.vercel.app",
+                    "https://offline-upi-pwa.vercel.app"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
