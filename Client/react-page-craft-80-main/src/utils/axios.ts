@@ -69,7 +69,7 @@ newsApi.interceptors.response.use(
     }
 );
 
-export default {
-    backendApi,
-    newsApi
+export const api = {
+    backend: backendApi,
+    news: newsApi
 }; 
