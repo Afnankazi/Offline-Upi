@@ -138,43 +138,62 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/update-name")
-    public ResponseEntity<?> updateName(@RequestBody Map<String, String> updateData) {
+    @PutMapping("/update-profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> updateData) {
         try {
-            String upiId = updateData.get("upiId");
+            String currentUpiId = updateData.get("currentUpiId");
+            String newUpiId = updateData.get("newUpiId");
             String name = updateData.get("name");
 
             // Validate required fields
-            if (upiId == null || name == null) {
+            if (currentUpiId == null || newUpiId == null || name == null) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "UPI ID and name are required");
+                error.put("error", "All fields are required");
                 return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
             }
 
-            // Check if user exists
-            Optional<User> user = userService.getUserByUpiId(upiId);
-            if (user.isEmpty()) {
+            // Validate UPI ID format
+            if (!newUpiId.contains("@")) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Invalid UPI ID format");
+                return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            }
+
+            // Check if current user exists
+            Optional<User> currentUser = userService.getUserByUpiId(currentUpiId);
+            if (currentUser.isEmpty()) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "User not found");
                 return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
             }
 
-            // Update user name
-            User existingUser = user.get();
-            existingUser.setName(name);
+            // Check if new UPI ID is already taken (if different from current)
+            if (!currentUpiId.equals(newUpiId)) {
+                Optional<User> existingUser = userService.getUserByUpiId(newUpiId);
+                if (existingUser.isPresent()) {
+                    Map<String, String> error = new HashMap<>();
+                    error.put("error", "UPI ID already exists");
+                    return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+                }
+            }
+
+            // Update user profile
+            User user = currentUser.get();
+            user.setUpiId(newUpiId);
+            user.setName(name);
             
-            User updatedUser = userService.updateUser(existingUser);
+            User updatedUser = userService.updateUser(user);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Name updated successfully");
+            response.put("message", "Profile updated successfully");
             response.put("user", updatedUser);
             
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Failed to update name");
+            error.put("error", "Failed to update profile");
             return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

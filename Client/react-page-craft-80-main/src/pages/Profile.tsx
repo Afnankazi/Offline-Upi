@@ -4,20 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { UserRound, ArrowLeft, Lock, User, Save, LogOut } from 'lucide-react';
-import api from '../utils/axios';
+import { UserRound, ArrowLeft, Lock, User, Save, LogOut, AtSign } from 'lucide-react';
+import axiosInstance from '@/utils/axios';
 import { SHA256 } from 'crypto-js';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [name, setName] = useState('');
+  const [upiId, setUpiId] = useState('');
   const [currentPin, setCurrentPin] = useState('');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [upiId, setUpiId] = useState('');
 
   useEffect(() => {
     const storedName = localStorage.getItem('name');
@@ -26,11 +26,20 @@ const Profile = () => {
     if (storedUpiId) setUpiId(storedUpiId);
   }, []);
 
-  const handleNameUpdate = async () => {
-    if (!name.trim()) {
+  const handleProfileUpdate = async () => {
+    if (!name.trim() || !upiId.trim()) {
       toast({
         title: "Error",
-        description: "Name cannot be empty",
+        description: "Name and UPI ID cannot be empty",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!upiId.includes('@')) {
+      toast({
+        title: "Error",
+        description: "UPI ID must contain '@' symbol",
         variant: "destructive"
       });
       return;
@@ -38,22 +47,24 @@ const Profile = () => {
 
     setIsLoading(true);
     try {
-      const response = await api.put('/api/users/update-name', {
-        upiId: upiId,
+      const response = await axiosInstance.put('/api/users/update-profile', {
+        currentUpiId: localStorage.getItem('upiId'),
+        newUpiId: upiId.trim(),
         name: name.trim()
       });
 
       if (response.data.success) {
         localStorage.setItem('name', name.trim());
+        localStorage.setItem('upiId', upiId.trim());
         toast({
           title: "Success",
-          description: "Name updated successfully"
+          description: "Profile updated successfully"
         });
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update name",
+        description: "Failed to update profile",
         variant: "destructive"
       });
     } finally {
@@ -94,7 +105,7 @@ const Profile = () => {
       const hashedCurrentPin = SHA256(currentPin).toString();
       const hashedNewPin = SHA256(newPin).toString();
 
-      const response = await api.put('/api/users/update-pin', {
+      const response = await axiosInstance.put('/api/users/update-pin', {
         upiId,
         currentPin: hashedCurrentPin,
         newPin: hashedNewPin
@@ -173,38 +184,49 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Name Update Form */}
+              {/* Profile Update Form */}
               <div className="mb-6">
                 <Label htmlFor="name" className="flex items-center mb-2 text-gray-700">
                   <User className="h-4 w-4 mr-2 text-seva-green" />
                   Update Name
                 </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="flex-1"
-                    placeholder="Enter your name"
-                  />
-                  <Button 
-                    onClick={handleNameUpdate}
-                    disabled={isLoading}
-                    className="bg-seva-green hover:bg-seva-green/90 text-white"
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-white rounded-full"></div>
-                        Updating...
-                      </div>
-                    ) : (
-                      <div className="flex items-center">
-                        <Save className="w-4 h-4 mr-2" />
-                        Update
-                      </div>
-                    )}
-                  </Button>
-                </div>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="mb-3"
+                  placeholder="Enter your name"
+                />
+
+                <Label htmlFor="upiId" className="flex items-center mb-2 text-gray-700">
+                  <AtSign className="h-4 w-4 mr-2 text-seva-green" />
+                  Update UPI ID
+                </Label>
+                <Input
+                  id="upiId"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  className="mb-3"
+                  placeholder="username@bankname"
+                />
+
+                <Button 
+                  onClick={handleProfileUpdate}
+                  disabled={isLoading}
+                  className="w-full bg-seva-green hover:bg-seva-green/90 text-white"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-white rounded-full"></div>
+                      Updating...
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <Save className="w-4 h-4 mr-2" />
+                      Update Profile
+                    </div>
+                  )}
+                </Button>
               </div>
 
               {/* PIN Update Form */}

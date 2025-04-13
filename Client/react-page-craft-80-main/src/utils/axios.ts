@@ -1,46 +1,40 @@
 import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
 
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    withCredentials: true
+const axiosInstance = axios.create({
+  baseURL: 'https://offline-upi-backend.onrender.com',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: false // Important: Set this to false for CORS
 });
 
-// Add request interceptor
-api.interceptors.request.use(
-    (config) => {
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
+// Add a request interceptor
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // You can add any request modifications here
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// Add response interceptor
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response) {
-            switch (error.response.status) {
-                case 401:
-                    // Handle unauthorized
-                    break;
-                case 403:
-                    // Handle forbidden
-                    break;
-                case 404:
-                    // Handle not found
-                    break;
-                default:
-                    // Handle other errors
-                    break;
-            }
-        }
-        return Promise.reject(error);
+// Add a response interceptor
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Handle errors here
+    if (error.response) {
+      console.error('Response error:', error.response.data);
+    } else if (error.request) {
+      console.error('Request error:', error.request);
+    } else {
+      console.error('Error:', error.message);
     }
+    return Promise.reject(error);
+  }
 );
 
-export default api; 
+export default axiosInstance; 
