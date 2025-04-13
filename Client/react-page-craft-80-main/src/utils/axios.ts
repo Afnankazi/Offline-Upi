@@ -2,7 +2,7 @@ import axios from 'axios';
 import { API_BASE_URL, MEDIASTACK_API } from '../config/api';
 
 // Backend API instance
-export const backendApi = axios.create({
+const backendApi = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
@@ -11,7 +11,7 @@ export const backendApi = axios.create({
 });
 
 // MediaStack API instance
-export const newsApi = axios.create({
+const newsApi = axios.create({
     baseURL: MEDIASTACK_API.BASE_URL,
     headers: {
         'Content-Type': 'application/json',
@@ -67,4 +67,6 @@ newsApi.interceptors.response.use(
         }
         return Promise.reject(error);
     }
-); 
+);
+
+export { backendApi, newsApi }; 

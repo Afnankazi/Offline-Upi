@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { UserRound, ArrowLeft, Lock, User, Save, LogOut } from 'lucide-react';
-import { backendApi } from '@/utils/axios';
+import { backendApi } from '../utils/axios';
 import { SHA256 } from 'crypto-js';
 
 const Profile = () => {
