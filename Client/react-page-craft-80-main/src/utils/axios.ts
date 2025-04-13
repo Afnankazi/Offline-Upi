@@ -69,4 +69,7 @@ newsApi.interceptors.response.use(
     }
 );
 
-export { backendApi, newsApi }; 
+export default {
+    backendApi,
+    newsApi
+}; 
