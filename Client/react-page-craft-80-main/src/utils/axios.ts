@@ -1,8 +1,7 @@
 import axios from 'axios';
-import { API_BASE_URL, MEDIASTACK_API } from '../config/api';
+import { API_BASE_URL } from '../config/api';
 
-// Backend API instance
-const backendApi = axios.create({
+const api = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
@@ -10,23 +9,9 @@ const backendApi = axios.create({
     withCredentials: true
 });
 
-// MediaStack API instance
-const newsApi = axios.create({
-    baseURL: MEDIASTACK_API.BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    params: {
-        access_key: MEDIASTACK_API.ACCESS_KEY,
-        sources: 'business',
-        limit: 5
-    }
-});
-
-// Add request interceptor for backend API
-backendApi.interceptors.request.use(
+// Add request interceptor
+api.interceptors.request.use(
     (config) => {
-        // You can add auth token here if needed
         return config;
     },
     (error) => {
@@ -34,8 +19,8 @@ backendApi.interceptors.request.use(
     }
 );
 
-// Add response interceptor for backend API
-backendApi.interceptors.response.use(
+// Add response interceptor
+api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response) {
@@ -58,18 +43,4 @@ backendApi.interceptors.response.use(
     }
 );
 
-// Add response interceptor for news API
-newsApi.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response) {
-            console.error('News API Error:', error.response.data);
-        }
-        return Promise.reject(error);
-    }
-);
-
-export const api = {
-    backend: backendApi,
-    news: newsApi
-}; 
+export default api; 

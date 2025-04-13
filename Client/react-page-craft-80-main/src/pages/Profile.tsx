@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { UserRound, ArrowLeft, Lock, User, Save, LogOut } from 'lucide-react';
-import { api } from '../utils/axios';
+import api from '../utils/axios';
 import { SHA256 } from 'crypto-js';
 
 const Profile = () => {
@@ -38,7 +38,7 @@ const Profile = () => {
 
     setIsLoading(true);
     try {
-      const response = await api.backend.put('/api/users/update-name', {
+      const response = await api.put('/api/users/update-name', {
         upiId: upiId,
         name: name.trim()
       });
@@ -94,7 +94,7 @@ const Profile = () => {
       const hashedCurrentPin = SHA256(currentPin).toString();
       const hashedNewPin = SHA256(newPin).toString();
 
-      const response = await api.backend.put('/api/users/update-pin', {
+      const response = await api.put('/api/users/update-pin', {
         upiId,
         currentPin: hashedCurrentPin,
         newPin: hashedNewPin
