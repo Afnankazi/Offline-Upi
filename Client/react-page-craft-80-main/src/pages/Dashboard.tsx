@@ -44,9 +44,9 @@ const Dashboard = () => {
   const [news, setNews] = useState([]);
   // Fetch balance on component mount
   useEffect(() => {
-    const fetchBalance = async () => {
+    const fetchNews = async () => {
       try {
-        const response = await axiosInstance.get('/news', {
+        const response = await axios.get('http://api.mediastack.com/v1/news', {
           params: {
             access_key: '93074874edf9c762ce948a83830a3505',
             sources: 'business',
@@ -61,8 +61,10 @@ const Dashboard = () => {
         setNews([]); // Set empty array on error
       }
     };
-    fetchBalance();
+  
+    fetchNews();
   }, []);
+  
 
   const recentContacts = [
     { id: 1, name: "Lisa", avatar: <AccountCircleIcon /> },
