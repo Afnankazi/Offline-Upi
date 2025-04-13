@@ -46,7 +46,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await axios.get('http://api.mediastack.com/v1/news', {
+        const response = await axios.get('https://api.mediastack.com/v1/news', {
           params: {
             access_key: '93074874edf9c762ce948a83830a3505',
             sources: 'business',
