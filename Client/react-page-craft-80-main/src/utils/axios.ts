@@ -1,17 +1,17 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://offline-upi-backend.onrender.com',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://offline-upi-backend.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: false // Important: Set this to false for CORS
+  withCredentials: true
 });
 
 // Add a request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // You can add any request modifications here
+    // Add any request modifications here
     return config;
   },
   (error) => {
