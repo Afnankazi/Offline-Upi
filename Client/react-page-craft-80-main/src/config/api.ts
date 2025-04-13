@@ -1,7 +1,8 @@
-// Backend API Configuration
-export const API_BASE_URL = 'https://offline-upi-backend.vercel.app/api';
-// or use your local backend during development
-// export const API_BASE_URL = 'http://localhost:8080/api'; 
+// Production API URL
+export const API_BASE_URL = 'https://offline-upi-backend.vercel.app';
+
+// Development API URL (uncomment this and comment the production URL when testing locally)
+// export const API_BASE_URL = 'http://localhost:8080';
 
 // MediaStack API Configuration
 export const MEDIASTACK_API = {
@@ -14,11 +15,11 @@ export const MEDIASTACK_API = {
 
 // API endpoints for backend
 export const API_ENDPOINTS = {
-    LOGIN: '/users/validate',
-    REGISTER: '/users/register',
-    UPDATE_NAME: '/users/update-name',
-    UPDATE_PIN: '/users/update-pin',
-    BALANCE: '/users/Balance',
-    TRANSFER: '/users/transfer',
-    HISTORY: '/users/history'
+    LOGIN: '/api/users/validate',
+    REGISTER: '/api/users/register',
+    UPDATE_NAME: '/api/users/update-name',
+    UPDATE_PIN: '/api/users/update-pin',
+    BALANCE: '/api/users/Balance',
+    TRANSFER: '/api/users/transfer',
+    HISTORY: '/api/users/history'
 }; 
