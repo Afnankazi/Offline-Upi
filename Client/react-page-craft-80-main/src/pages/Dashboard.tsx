@@ -29,6 +29,7 @@ import { API_BASE_URL } from '@/config';
 import axiosInstance from '@/utils/axios';
 import { AxiosError } from 'axios';
 import BLog from './BLog';
+import { NEWS_API } from '../config/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -42,26 +43,24 @@ const Dashboard = () => {
   const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [news, setNews] = useState([]);
-  // Fetch balance on component mount
-  useEffect(() => {
-    const fetchBalance = async () => {
-      try {
-        const response = await axiosInstance.get('/news', {
-          params: {
-            access_key: '93074874edf9c762ce948a83830a3505',
-            sources: 'business',
-            limit: 5
-          }
-        });
-        if (response.data && response.data.data) {
-          setNews(response.data.data);
+
+  const fetchNews = async () => {
+    try {
+      const response = await axios.get(`${NEWS_API.BASE_URL}${NEWS_API.ENDPOINT}`, {
+        params: {
+          access_key: NEWS_API.ACCESS_KEY,
+          ...NEWS_API.PARAMS
         }
-      } catch (error) {
-        console.error("Error fetching news:", error);
-        setNews([]); // Set empty array on error
-      }
-    };
-    fetchBalance();
+      });
+      setNews(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      setNews([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchNews();
   }, []);
 
   const recentContacts = [
