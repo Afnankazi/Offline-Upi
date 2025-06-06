@@ -42,6 +42,8 @@ const TransactionHistory = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [totalDebit, setTotalDebit] = useState<number>(0);
+  const [totalCredit, setTotalCredit] = useState<number>(0);
 
   // Function to fetch transaction history
   const fetchTransactionHistory = async () => {
@@ -65,6 +67,8 @@ const TransactionHistory = () => {
       // Hash the PIN using SHA-256
       const hashedPin = SHA256(pin).toString();
       
+      console.log('Fetching transactions for UPI ID:', upiId);
+      
       // Make API call to get transaction history
       const response = await axiosInstance.get('/api/users/history', {
         params: {
@@ -73,9 +77,24 @@ const TransactionHistory = () => {
         }
       });
       
+      console.log('Received transactions:', response.data);
+      
       // Update transactions state
       setTransactions(response.data);
       
+      // Calculate summary statistics
+      let debitSum = 0;
+      let creditSum = 0;
+      response.data.forEach((transaction: Transaction) => {
+        if (transaction.transactionType === 'DEBIT') {
+          debitSum += transaction.amount;
+        } else if (transaction.transactionType === 'CREDIT') {
+          creditSum += transaction.amount;
+        }
+      });
+      setTotalDebit(debitSum);
+      setTotalCredit(creditSum);
+
       // Group transactions by date
       groupTransactionsByDate(response.data);
       
@@ -109,6 +128,8 @@ const TransactionHistory = () => {
 
   // Function to group transactions by date
   const groupTransactionsByDate = (transactions: Transaction[]) => {
+    console.log('Grouping transactions:', transactions);
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -128,6 +149,14 @@ const TransactionHistory = () => {
       const transactionDate = new Date(transaction.initiatedAt);
       transactionDate.setHours(0, 0, 0, 0);
       
+      console.log('Processing transaction:', {
+        id: transaction.transactionId,
+        date: transactionDate,
+        today: today,
+        yesterday: yesterday,
+        lastSevenDays: lastSevenDays
+      });
+      
       if (transactionDate.getTime() === today.getTime()) {
         grouped.today.push(transaction);
       } else if (transactionDate.getTime() === yesterday.getTime()) {
@@ -137,6 +166,7 @@ const TransactionHistory = () => {
       }
     });
     
+    console.log('Grouped transactions:', grouped);
     setGroupedTransactions(grouped);
   };
 
@@ -185,7 +215,7 @@ const TransactionHistory = () => {
     if (transaction.transactionType === 'DEBIT') {
       return `To: ${transaction.receiverUpi}`;
     } else {
-      return `From: ${transaction.sender.upiId}`;
+      return `From: ${transaction.sender?.upiId || 'Unknown'}`;
     }
   };
 
@@ -220,6 +250,21 @@ const TransactionHistory = () => {
           <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
         </Button>
       </header>
+
+      {/* Summary Statistics */}
+      {!isLoading && transactions.length > 0 && (
+        <div className="bg-white p-4 m-4 rounded-lg shadow-sm">
+          <h2 className="text-base font-medium mb-2">Summary</h2>
+          <div className="flex justify-between text-sm">
+            <p className="text-red-600">Total Sent:</p>
+            <p className="text-red-600">₹{totalDebit.toFixed(2)}</p>
+          </div>
+          <div className="flex justify-between text-sm mt-1">
+            <p className="text-green-600">Total Received:</p>
+            <p className="text-green-600">₹{totalCredit.toFixed(2)}</p>
+          </div>
+        </div>
+      )}
 
       {/* Loading State */}
       {isLoading ? (
@@ -314,6 +359,41 @@ const TransactionHistory = () => {
                     {getTransactionIcon(transaction)}
           </div>
               <div className="flex-1">
+                    <div className="flex justify-between">
+                      <p className="font-medium">{getTransactionName(transaction)}</p>
+                      <p className={`font-medium ${transaction.transactionType === 'DEBIT' ? 'text-red-500' : 'text-green-500'}`}>
+                        {getTransactionAmount(transaction)}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
+                        transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                        transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {transaction.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* All Transactions Section (if no groups match) */}
+          {transactions.length > 0 && groupedTransactions.today.length === 0 && groupedTransactions.yesterday.length === 0 && groupedTransactions.lastSevenDays.length === 0 && (
+            <div>
+              <div className="mb-2">
+                <p className="text-xs font-medium text-gray-500">ALL TRANSACTIONS</p>
+              </div>
+              {transactions.map((transaction) => (
+                <div key={transaction.transactionId} className="flex items-center mb-4 bg-white p-3 rounded-lg shadow-sm">
+                  <div className={`w-10 h-10 ${getTransactionColor(transaction)} rounded-lg flex items-center justify-center mr-3`}>
+                    {getTransactionIcon(transaction)}
+                  </div>
+                  <div className="flex-1">
                     <div className="flex justify-between">
                       <p className="font-medium">{getTransactionName(transaction)}</p>
                       <p className={`font-medium ${transaction.transactionType === 'DEBIT' ? 'text-red-500' : 'text-green-500'}`}>

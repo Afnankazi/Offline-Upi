@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 @Service
 @Transactional
@@ -112,11 +113,11 @@ public class UserServiceImpl implements UserService {
         List<Transaction> sentTransactions = transactionRepository.findBySenderUpiId(upiId);
         List<Transaction> receivedTransactions = transactionRepository.findByReceiverUpi(upiId);
         
-        // Combine and sort transactions by initiatedAt in descending order (newest first)
-        List<Transaction> allTransactions = sentTransactions;
+        // Create a new ArrayList to store all transactions
+        List<Transaction> allTransactions = new ArrayList<>(sentTransactions);
         allTransactions.addAll(receivedTransactions);
         
-        // Sort by initiatedAt in descending order
+        // Sort by initiatedAt in descending order (newest first)
         allTransactions.sort((t1, t2) -> t2.getInitiatedAt().compareTo(t1.getInitiatedAt()));
         
         return allTransactions;

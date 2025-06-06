@@ -44,18 +44,46 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
-        return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
+        try {
+            User createdUser = userService.createUser(user);
+            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null); // Or a specific error response body
+        }
     }
 
     @PutMapping("/{upiId}")
     public ResponseEntity<User> updateUser(@PathVariable String upiId, @RequestBody User user) {
-        return ResponseEntity.ok(userService.updateUser(user));
+        // This endpoint might be less useful if UPI ID can be changed via /update-profile
+        // Consider if you still need this or how it should behave if UPI ID changes are handled elsewhere.
+        // Assuming this updates the user found by the path variable UPI ID with the data from the request body.
+        
+        // Ensure the UPI ID in the path matches the user object if it's meant to update by path ID
+        if (!upiId.equals(user.getUpiId())) {
+             // Decide how to handle this inconsistency - maybe return a bad request or throw an exception
+             // For now, let's assume the request body's UPI ID is the intended one for update
+        }
+        
+        try {
+            User updatedUser = userService.updateUser(user);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IllegalArgumentException e) {
+             return ResponseEntity.badRequest().body(null); // Or a specific error response body
+        } catch (RuntimeException e) {
+            // Catch potential issues from service layer, though service should ideally throw more specific exceptions
+             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Or a specific error response body
+        }
     }
 
     @DeleteMapping("/{upiId}")
     public ResponseEntity<Void> deleteUser(@PathVariable String upiId) {
-        userService.deleteUser(upiId);
-        return ResponseEntity.ok().build();
+        try {
+            userService.deleteUser(upiId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            // Handle cases where user might not exist, though deleteById might not throw on not found
+             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/Balance")
@@ -63,14 +91,26 @@ public class UserController {
             @RequestParam String upiId,
             @RequestParam String hashedPin) {
         
-        User user = new User();
-        user.setUpiId(upiId);
-        user.setHashedPin(hashedPin);
-        
-        String balance = userService.getBalance(user);
-        Map<String, String> response = new HashMap<>();
-        response.put("balance", balance);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        try {
+            User user = new User();
+            user.setUpiId(upiId);
+            user.setHashedPin(hashedPin);
+            
+            String balance = userService.getBalance(user);
+            Map<String, String> response = new HashMap<>();
+            response.put("balance", balance);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            if (e.getMessage().contains("Invalid PIN")) {
+                return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+            } else if (e.getMessage().contains("not found")) {
+                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+            } else {
+                return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            }
+        }
     }
 
     @PostMapping("/validate")
@@ -114,9 +154,12 @@ public class UserController {
             @RequestParam String hashedPin) {
         
         try {
+            System.out.println("Fetching history for UPI ID: " + upiId);
             List<Transaction> transactions = userService.getHistory(upiId, hashedPin);
+            System.out.println("Found " + transactions.size() + " transactions");
             return ResponseEntity.ok(transactions);
         } catch (IllegalArgumentException e) {
+            System.out.println("Error fetching history: " + e.getMessage());
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             
@@ -139,62 +182,66 @@ public class UserController {
     }
 
     @PutMapping("/update-profile")
-    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> updateData) {
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> request) {
         try {
-            String currentUpiId = updateData.get("currentUpiId");
-            String newUpiId = updateData.get("newUpiId");
-            String name = updateData.get("name");
+            String currentUpiId = request.get("currentUpiId");
+            String newUpiId = request.get("newUpiId");
+            String name = request.get("name");
 
             // Validate required fields
-            if (currentUpiId == null || newUpiId == null || name == null) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "All fields are required");
-                return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            if (currentUpiId == null || currentUpiId.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Current UPI ID is required"
+                ));
             }
 
-            // Validate UPI ID format
-            if (!newUpiId.contains("@")) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Invalid UPI ID format");
-                return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            // Find existing user
+            Optional<User> existingUserOptional = userService.getUserByUpiId(currentUpiId);
+
+            if (existingUserOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", "User with current UPI ID not found"
+                ));
             }
 
-            // Check if current user exists
-            Optional<User> currentUser = userService.getUserByUpiId(currentUpiId);
-            if (currentUser.isEmpty()) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "User not found");
-                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
-            }
+            User existingUser = existingUserOptional.get();
 
-            // Check if new UPI ID is already taken (if different from current)
-            if (!currentUpiId.equals(newUpiId)) {
-                Optional<User> existingUser = userService.getUserByUpiId(newUpiId);
-                if (existingUser.isPresent()) {
-                    Map<String, String> error = new HashMap<>();
-                    error.put("error", "UPI ID already exists");
-                    return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+            // Handle UPI ID change
+            if (newUpiId != null && !newUpiId.isEmpty() && !newUpiId.equals(currentUpiId)) {
+                // Check if new UPI ID is already taken
+                if (userService.getUserByUpiId(newUpiId).isPresent()) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", "New UPI ID already exists"
+                    ));
                 }
+                // To change the primary key, delete the old entity and save a new one.
+                userService.deleteUser(currentUpiId);
+                existingUser.setUpiId(newUpiId); // Set the new UPI ID on the existing object
             }
 
-            // Update user profile
-            User user = currentUser.get();
-            user.setUpiId(newUpiId);
-            user.setName(name);
-            
-            User updatedUser = userService.updateUser(user);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Profile updated successfully");
-            response.put("user", updatedUser);
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Failed to update profile");
-            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+            // Update other fields if provided
+            if (name != null && !name.isEmpty()) {
+                existingUser.setName(name);
+            }
+
+            // Save the updated user (will insert if UPI ID was changed)
+            User updatedUser = userService.updateUser(existingUser);
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Profile updated successfully",
+                "user", Map.of(
+                    "upiId", updatedUser.getUpiId(),
+                    "name", updatedUser.getName(),
+                    "email", updatedUser.getEmail(), // Include other relevant fields
+                    "phoneNumber", updatedUser.getPhoneNumber()
+                )
+            ));
+        } catch (Exception e) { // Catching generic Exception - consider more specific exceptions if needed
+            // Log the error on the server side for debugging
+            e.printStackTrace(); 
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "An unexpected error occurred: " + e.getMessage()));
         }
     }
 

@@ -42,6 +42,7 @@ const Dashboard = () => {
   const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [news, setNews] = useState([]);
+  const [recentContacts, setRecentContacts] = useState([]);
   // Fetch balance on component mount
   useEffect(() => {
     const fetchNews = async () => {
@@ -65,13 +66,77 @@ const Dashboard = () => {
     fetchNews();
   }, []);
   
+  // Fetch transaction history on component mount
+  useEffect(() => {
+    console.log('useEffect for transaction history is running');
+    const fetchTransactionHistory = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Get user data from localStorage
+        const upiId = localStorage.getItem('upiId');
+        const pin = localStorage.getItem('userPin');
+        
+        if (!upiId || !pin) {
+          toast({
+            title: "Authentication Error",
+            description: "Please log in again to view your transaction history",
+            variant: "destructive"
+          });
+          navigate('/');
+          return;
+        }
+        
+        // Hash the PIN using SHA-256
+        const hashedPin = SHA256(pin).toString();
+        
+        console.log('Fetching transactions for UPI ID:', upiId);
+        
+        // Make API call to get transaction history
+        const response = await axiosInstance.get('/api/users/history', {
+          params: {
+            upiId: upiId,
+            hashedPin: hashedPin
+          }
+        });
+        
+        console.log('Received transactions:', response.data);
+        
+        // Update transactions state
+        const sorted = response.data.sort((a, b) => new Date(b.initiatedAt).getTime() - new Date(a.initiatedAt).getTime());
+        const recentFive = sorted.slice(0, 5);
+        console.log('Recent 5 transactions after sorting and slicing:', recentFive);
+        setRecentContacts(recentFive);
+        
+      } catch (error) {
+        console.error("Error fetching transaction history:", error);
+        
+        // Extract error message if available
+        let errorMessage = "Failed to fetch transaction history";
+        if (error instanceof AxiosError) {
+          if (error.response?.data?.error) {
+            errorMessage = error.response.data.error;
+          } else if (error.response?.status === 401) {
+            errorMessage = "Invalid PIN";
+          } else if (error.response?.status === 404) {
+            errorMessage = "User not found";
+          } else if (!error.response) {
+            errorMessage = "Network error. Please check your connection.";
+          }
+        }
+        
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const recentContacts = [
-    { id: 1, name: "Lisa", avatar: <AccountCircleIcon /> },
-    { id: 2, name: "Sarah", avatar: <AccountCircleIcon /> },
-    { id: 3, name: "Arjun", avatar: <AccountCircleIcon /> },
-    { id: 4, name: "Shaunak", avatar:<AccountCircleIcon /> },
-  ];
+    fetchTransactionHistory();
+  }, [navigate, toast]);
 
   // Handler for the wallet button to navigate to QR scanner
   const handleWalletClick = () => {
@@ -324,13 +389,12 @@ const Dashboard = () => {
         <section className="mb-6">
           <h2 className="text-base font-medium mb-3">{t.recentPayments}</h2>
           <div className="flex space-x-4 overflow-x-auto pb-2">
-            {recentContacts.map((contact) => (
-              <div key={contact.id} className="flex flex-col items-center">
+            {recentContacts.map((transaction) => (
+              <div key={transaction.transactionId} className="flex flex-col items-center">
                 <Avatar className="h-12 w-12 mb-1">
-                  <AvatarImage  alt={contact.name} />
-                  <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{transaction.transactionType === 'DEBIT' ? transaction.receiverUpi.charAt(0) : transaction.sender?.name?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
-                <p className="text-xs">{contact.name}</p>
+                <p className="text-xs">{transaction.transactionType === 'DEBIT' ? transaction.receiverUpi : transaction.sender?.name || 'Unknown'}</p>
               </div>
             ))}
           </div>

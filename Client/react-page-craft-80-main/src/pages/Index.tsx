@@ -8,10 +8,6 @@ const Index = () => {
   const { toast } = useToast();
 
   const handleLogin = () => {
-    toast({
-      title: "Login",
-      description: "Login functionality will be implemented soon.",
-    });
   };
 
   const handleSignUp = () => {
