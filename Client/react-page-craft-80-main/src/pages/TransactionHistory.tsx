@@ -29,6 +29,7 @@ interface GroupedTransactions {
   today: Transaction[];
   yesterday: Transaction[];
   lastSevenDays: Transaction[];
+  older: Transaction[];
 }
 
 const TransactionHistory = () => {
@@ -38,7 +39,8 @@ const TransactionHistory = () => {
   const [groupedTransactions, setGroupedTransactions] = useState<GroupedTransactions>({
     today: [],
     yesterday: [],
-    lastSevenDays: []
+    lastSevenDays: [],
+    older: []
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -142,7 +144,8 @@ const TransactionHistory = () => {
     const grouped: GroupedTransactions = {
       today: [],
       yesterday: [],
-      lastSevenDays: []
+      lastSevenDays: [],
+      older: []
     };
     
     transactions.forEach(transaction => {
@@ -161,8 +164,10 @@ const TransactionHistory = () => {
         grouped.today.push(transaction);
       } else if (transactionDate.getTime() === yesterday.getTime()) {
         grouped.yesterday.push(transaction);
-      } else if (transactionDate.getTime() >= lastSevenDays.getTime()) {
+      } else if (transactionDate.getTime() > lastSevenDays.getTime() && transactionDate.getTime() < yesterday.getTime()) {
         grouped.lastSevenDays.push(transaction);
+      } else {
+        grouped.older.push(transaction);
       }
     });
     
@@ -349,7 +354,7 @@ const TransactionHistory = () => {
 
         {/* Last 7 Days Section */}
           {groupedTransactions.lastSevenDays.length > 0 && (
-        <div>
+        <div className="mb-4">
           <div className="mb-2">
                 <p className="text-xs font-medium text-gray-500">LAST 7 DAYS</p>
               </div>
@@ -382,8 +387,43 @@ const TransactionHistory = () => {
             </div>
           )}
 
+          {/* Older Transactions Section */}
+          {groupedTransactions.older.length > 0 && (
+            <div>
+              <div className="mb-2">
+                <p className="text-xs font-medium text-gray-500">OLDER TRANSACTIONS</p>
+              </div>
+              {groupedTransactions.older.map((transaction) => (
+                <div key={transaction.transactionId} className="flex items-center mb-4 bg-white p-3 rounded-lg shadow-sm">
+                  <div className={`w-10 h-10 ${getTransactionColor(transaction)} rounded-lg flex items-center justify-center mr-3`}>
+                    {getTransactionIcon(transaction)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <p className="font-medium">{getTransactionName(transaction)}</p>
+                      <p className={`font-medium ${transaction.transactionType === 'DEBIT' ? 'text-red-500' : 'text-green-500'}`}>
+                        {getTransactionAmount(transaction)}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
+                        transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                        transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {transaction.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* All Transactions Section (if no groups match) */}
-          {transactions.length > 0 && groupedTransactions.today.length === 0 && groupedTransactions.yesterday.length === 0 && groupedTransactions.lastSevenDays.length === 0 && (
+          {transactions.length > 0 && groupedTransactions.today.length === 0 && groupedTransactions.yesterday.length === 0 && groupedTransactions.lastSevenDays.length === 0 && groupedTransactions.older.length === 0 && (
             <div>
               <div className="mb-2">
                 <p className="text-xs font-medium text-gray-500">ALL TRANSACTIONS</p>
