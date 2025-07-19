@@ -199,6 +199,57 @@ const Login = () => {
     }
   };
 
+  /**
+   * Attempts to create a passkey (biometric credential) for the given UPI ID.
+   * Returns true if successful, false otherwise.
+   */
+  async function createPasskey(upiId: string): Promise<boolean> {
+    // Check if WebAuthn is supported
+    if (!window.PublicKeyCredential) {
+      return false;
+    }
+
+    try {
+      // Create a random challenge (in real apps, get from server)
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+
+      // Use UPI ID as user ID (should be unique per user)
+      const userId = new TextEncoder().encode(upiId);
+
+      const publicKey: PublicKeyCredentialCreationOptions = {
+        challenge,
+        rp: {
+          name: "Offline UPI",
+        },
+        user: {
+          id: userId,
+          name: upiId,
+          displayName: upiId,
+        },
+        pubKeyCredParams: [
+          { type: "public-key", alg: -7 }, // ES256
+          { type: "public-key", alg: -257 }, // RS256
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: "platform",
+          userVerification: "required",
+        },
+        timeout: 60000,
+        attestation: "none",
+      };
+
+      // Prompt user to register a credential
+      const credential = await navigator.credentials.create({ publicKey });
+
+      // In a real app, send credential to server for verification and storage
+      // Here, we just check if credential was created
+      return !!credential;
+    } catch (error) {
+      console.error("createPasskey error:", error);
+      return false;
+    }
+  }
   return (
     <div className="min-h-screen bg-seva-green p-4">
       <div className="max-w-md mx-auto pt-10">
