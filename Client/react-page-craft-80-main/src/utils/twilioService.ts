@@ -1,14 +1,14 @@
-// This is a placeholder for the actual SMS sending implementation
-// In a real offline UPI app, you would use a native SMS API or service
+import { createSecureSmsPayload } from './encryption';
 
 const TWILIO_PHONE_NUMBER = '+19152683408';
 
 export const sendTransactionSMS = async (
-  encryptedData: string
+  payload: string,
+  alreadyEncrypted: boolean = false
 ): Promise<void> => {
   try {
-    // Use the encrypted data directly as the message
-    const message = encryptedData;
+    // If not already encrypted, create secure SMS payload
+    const message = alreadyEncrypted ? payload : createSecureSmsPayload(payload);
     
     // Create the SMS URL with the phone number and message
     const smsUrl = `sms:${TWILIO_PHONE_NUMBER}?body=${encodeURIComponent(message)}`;

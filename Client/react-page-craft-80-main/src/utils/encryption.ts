@@ -121,3 +121,46 @@ export const willFitInSms = (jsonString: string): boolean => {
   // Add 10 characters for JSON wrapping {"e":"..."}
   return (compressed.length + 10) <= 160;
 }; 
+
+function generateNonce(): string {
+  const array = new Uint8Array(8);
+  if (typeof window !== 'undefined' && window.crypto) {
+    window.crypto.getRandomValues(array);
+  } else {
+    // fallback for environments without window.crypto
+    for (let i = 0; i < array.length; i++) array[i] = Math.floor(Math.random() * 256);
+  }
+  return CryptoJS.enc.Base64.stringify(CryptoJS.lib.WordArray.create(array))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function getTimestamp(): string {
+  return Math.floor(Date.now() / 1000).toString();
+}
+
+function calculateHmac(data: string, key: string): string {
+  const keyWordArray = CryptoJS.enc.Base64.parse(key);
+  const dataWordArray = CryptoJS.enc.Utf8.parse(data);
+  const hmac = CryptoJS.HmacSHA256(dataWordArray, keyWordArray);
+  return CryptoJS.enc.Base64.stringify(hmac)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+/**
+ * Compress, encrypt, and wrap with timestamp, nonce, and HMAC for SMS
+ */
+export const createSecureSmsPayload = (plainText: string): string => {
+  // Compress and encrypt
+  const encryptedData = compressAndEncrypt(plainText);
+  // Generate timestamp and nonce
+  const timestamp = getTimestamp();
+  const nonce = generateNonce();
+  // HMAC is over the encrypted data (string)
+  const hmac = calculateHmac(encryptedData, SECRET_KEY);
+  // Format: timestamp:nonce:hmac:encryptedData
+  return `${timestamp}:${nonce}:${hmac}:${encryptedData}`;
+}; 

@@ -37,6 +37,7 @@ public class TransactionController {
 
     @PostMapping("/initiate")
     public ResponseEntity<Transaction> initiateTransaction(@RequestBody Transaction transaction) {
+        System.out.println(transaction);
         return new ResponseEntity<>(transactionServiceImpl.initiateTransaction(transaction), HttpStatus.CREATED);
     }
     @PostMapping("/einitiate")

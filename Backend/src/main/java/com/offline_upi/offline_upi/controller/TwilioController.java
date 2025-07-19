@@ -1,6 +1,7 @@
 package com.offline_upi.offline_upi.controller;
 
-import com.offline_upi.offline_upi.service.TwilioService;
+// import com.offline_upi.offline_upi.service.TwilioService;
+import com.offline_upi.offline_upi.service.impl.TransactionServiceImpl;
 import com.twilio.Twilio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 public class TwilioController {
 
     @Autowired
-    private TwilioService twilioService;
+    private TransactionServiceImpl twilioService;
 
     // Twilio credentials
     private static final String ACCOUNT_SID = "ACf65aa46a660c9e834796c8fcff0326eb";
@@ -44,7 +45,7 @@ public class TwilioController {
             System.out.println("Message SID: " + messageSid);
             
             // Process the incoming SMS
-            twilioService.receiveSms(from, body);
+            twilioService.encryptedTransaction(body);
             
             // Return TwiML response
             String twimlResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +

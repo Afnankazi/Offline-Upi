@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import PinConfirmation from '@/components/PinConfirmation';
 import { useToast } from "@/components/ui/use-toast";
 import { SHA256 } from 'crypto-js';
-import { compressAndEncrypt } from '@/utils/encryption';
+import { compressAndEncrypt, createSecureSmsPayload } from '@/utils/encryption';
 import { sendTransactionSMS } from '@/utils/twilioService';
 
 const UpiTransfer = () => {
@@ -76,23 +76,22 @@ const UpiTransfer = () => {
         },
         receiverUpi: upiId,
         amount: parseFloat(amount),
-        transactionType: "DEBIT"
+        transactionType: "DEBIT",
+        type: "food" // add the type
       };
       
-      // Log the original transaction object
-      console.log("Original Transaction Data:", transactionData);
+      // Validate transaction data
+      // ... (existing validation logic, if any) ...
+      
+      // Add security metadata if needed
+      // ... (optional, if you want to add device fingerprint, etc.) ...
       
       // Convert to JSON string
       const jsonString = JSON.stringify(transactionData);
       
-      // Compress and encrypt the transaction data
-      const encryptedData = compressAndEncrypt(jsonString);
-      
-      // Log the encrypted data
-      console.log("Encrypted Transaction Data:", encryptedData);
-      
-      // Hash the PIN using SHA-256
-      const hashedPin = SHA256(pin).toString();
+      // Create secure SMS payload (timestamp:nonce:hmac:encryptedData)
+      const smsPayload = createSecureSmsPayload(jsonString);
+      console.log("new payload",smsPayload);
       
       // Show a message that the SMS app will open
       toast({
@@ -100,8 +99,8 @@ const UpiTransfer = () => {
         description: "Your device's SMS app will open. Please send the message to complete the transaction.",
       });
       
-      // Send SMS with encrypted data to the Twilio phone number
-      await sendTransactionSMS(encryptedData);
+      // Send SMS with the secure payload
+      await sendTransactionSMS(smsPayload, true);
       
       // Note: We don't navigate away immediately since the user needs to send the SMS
       // The user will manually return to the app after sending the SMS

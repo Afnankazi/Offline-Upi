@@ -16,16 +16,15 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOrigins(
                     clientUrl,
-                    "http://192.168.0.6:5173",
-                    "http://localhost:5173",
-                    "http://127.0.0.1:5173",
-                    "https://7600-103-58-153-95.ngrok-free.app",
+                    "http://578249735f74.ngrok-free.app",
+                    "https://578249735f74.ngrok-free.app",
+                    "https://*.ngrok-free.app",
                     "https://offline-e0zat60ic-afnankazis-projects.vercel.app"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials")
                 .allowCredentials(true)
-                .maxAge(3600);
+                .maxAge(3600); // Add cache for CORS preflight
     }
 }

@@ -44,14 +44,15 @@ public class Transaction {
     @Column(name = "sms_reference", unique = true)
     private String smsReference;
 
-    @Column(name = "is_offline_transaction")
-    private boolean isOfflineTransaction;
-
+   
     @Column(name = "sms_message")
     private String smsMessage;
 
     @Column(name = "retry_count")
     private Integer retryCount = 0;
+    
+    @Column(name = "type")
+    private String type;
 
     public enum TransactionType {
         DEBIT,  // Money going out (payment)
@@ -65,7 +66,5 @@ public class Transaction {
         OFFLINE_PENDING
     }
 
-    public void setIsOfflineTransaction(boolean isOfflineTransaction) {
-        this.isOfflineTransaction = isOfflineTransaction;
-    }
+    
 } 

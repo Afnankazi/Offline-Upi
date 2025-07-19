@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Fingerprint } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { SHA256 } from 'crypto-js';
 import axiosInstance from '@/utils/axios';
 import { AxiosError } from 'axios';
+import { isBiometricSupported, authenticateWithBiometric } from '../utils/biometrics';
 
 const Login = () => {
   const [upiId, setUpiId] = useState('');
@@ -18,6 +19,8 @@ const Login = () => {
   const [showPin, setShowPin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpiIdFocused, setIsUpiIdFocused] = useState(false);
+  const [isBiometricsAvailable, setIsBiometricsAvailable] = useState(false);
+  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const pinInputRef = React.useRef<HTMLInputElement>(null);
@@ -36,6 +39,19 @@ const Login = () => {
       }, 300);
     }
   }, []);
+
+  // Check biometric support
+  useEffect(() => {
+    const checkBiometricSupport = async () => {
+      const isSupported = await isBiometricSupported();
+      setIsBiometricsAvailable(isSupported);
+      // Check if user has enabled biometrics for their account
+      const biometricsEnabled = localStorage.getItem(`biometrics_${upiId}`);
+      setBiometricsEnabled(!!biometricsEnabled);
+    };
+    
+    checkBiometricSupport();
+  }, [upiId]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,6 +158,31 @@ const Login = () => {
     setShowPin(!showPin);
   };
 
+  const handleBiometricLogin = async () => {
+    try {
+      setIsLoading(true);
+      const isAuthenticated = await authenticateWithBiometric(upiId);
+      
+      if (isAuthenticated) {
+        // Get stored credentials
+        const storedPin = localStorage.getItem('userPin');
+        if (storedPin) {
+          // Use the stored PIN to login
+          setPin(storedPin);
+          handleLogin(new Event('submit') as any);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Biometric Authentication Failed",
+        description: "Please use your PIN instead",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-seva-green p-4">
       <div className="max-w-md mx-auto pt-10">
@@ -226,6 +267,30 @@ const Login = () => {
               </button>
             </div>
 
+            {/* Biometric Login */}
+            {isBiometricsAvailable && (
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="enableBiometrics" 
+                  checked={biometricsEnabled}
+                  onCheckedChange={(checked) => {
+                    setBiometricsEnabled(checked as boolean);
+                    if (checked) {
+                      localStorage.setItem(`biometrics_${upiId}`, 'true');
+                    } else {
+                      localStorage.removeItem(`biometrics_${upiId}`);
+                    }
+                  }}
+                />
+                <Label 
+                  htmlFor="enableBiometrics" 
+                  className="text-sm cursor-pointer"
+                >
+                  Enable fingerprint login
+                </Label>
+              </div>
+            )}
+
             <Button 
               type="submit" 
               className="w-full bg-seva-green hover:bg-seva-green/90 text-white font-medium"
@@ -233,6 +298,19 @@ const Login = () => {
             >
               {isLoading ? "Logging in..." : "Log In"}
             </Button>
+
+            {/* Biometric login button */}
+            {biometricsEnabled && (
+              <Button
+                type="button"
+                onClick={handleBiometricLogin}
+                className="w-full flex items-center justify-center space-x-2 bg-seva-green/10 hover:bg-seva-green/20 text-seva-green"
+                disabled={isLoading}
+              >
+                <Fingerprint className="w-5 h-5" />
+                <span>Login with Fingerprint</span>
+              </Button>
+            )}
           </form>
 
           {/* Terms */}

@@ -19,6 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.HashSet;
+import java.util.Set;
+import java.time.Instant;
+import java.util.Base64;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 @Service
 @Transactional
@@ -36,39 +42,71 @@ public class TransactionServiceImpl implements TransactionService {
     @Autowired
     private MailUtil mailUtil;
     
+    private static final String SECRET_KEY = "K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=";
+    private static final Set<String> usedNonces = new HashSet<>();
+
     @Override
-    public Transaction encryptedTransaction(String encryptedData) {
+    public Transaction encryptedTransaction(String smsPayload) {
         try {
-            System.out.println("Received encrypted data: " + encryptedData);
-            
-            // Decrypt the data
+            System.out.println("Received SMS payload: " + smsPayload);
+            // Parse format: timestamp:nonce:hmac:encryptedData
+            String[] parts = smsPayload.split(":", 4);
+            if (parts.length != 4) {
+                throw new TransactionException("Invalid SMS format. Expected timestamp:nonce:hmac:encryptedData");
+            }
+            String timestampStr = parts[0];
+            String nonce = parts[1];
+            String hmac = parts[2];
+            String encryptedData = parts[3];
+            System.out.println(encryptedData);
+
+            // 1. Validate timestamp (5 min window)
+            long timestamp = Long.parseLong(timestampStr);
+            long now = Instant.now().getEpochSecond();
+            if (Math.abs(now - timestamp) > 300) {
+                throw new TransactionException("SMS timestamp is too old or in the future");
+            }
+
+            // 2. Validate nonce (in-memory, not persistent)
+            synchronized (usedNonces) {
+                if (usedNonces.contains(nonce)) {
+                    throw new TransactionException("Nonce already used - possible replay attack");
+                }
+                usedNonces.add(nonce);
+                // Optionally clean up old nonces if set grows too large
+                if (usedNonces.size() > 10000) usedNonces.clear();
+            }
+
+            // 3. Validate HMAC
+            String expectedHmac = calculateHmac(encryptedData, SECRET_KEY);
+            if (!hmac.equals(expectedHmac)) {
+                throw new TransactionException("HMAC verification failed - data integrity compromised");
+            }
+
+            // 4. Decrypt the data
             String decryptedData = AESUtil.decryptAndDecompress(encryptedData);
-        
-            
-            
-            // Clean the decrypted data
+
+            // 5. Clean the decrypted data
             String cleanedData = decryptedData
-                .replaceAll("[^\\x20-\\x7E]", "") // Remove all non-ASCII characters
-                .replaceAll("\\s+", " ")          // Replace multiple spaces with single space
-                .replaceAll("\\s*,\\s*", ",")     // Remove spaces around commas
-                .replaceAll("\\s*:\\s*", ":")     // Remove spaces around colons
+                .replaceAll("[^\\x20-\\x7E]", "")
+                .replaceAll("\\s+", " ")
+                .replaceAll("\\s*,\\s*", ",")
+                .replaceAll("\\s*:\\s*", ":")
                 .trim();
-            
+
             System.out.println("Cleaned data: " + cleanedData);
-            
-            // Parse the JSON into a Transaction object
+
+            // 6. Parse the JSON into a Transaction object
             Transaction transaction = objectMapper.readValue(cleanedData, Transaction.class);
             System.out.println("Successfully parsed transaction: " + transaction);
-            
+
             // Set additional transaction details
             transaction.setStatus(Transaction.TransactionStatus.PENDING);
             transaction.setInitiatedAt(LocalDateTime.now());
-            transaction.setIsOfflineTransaction(true);
             transaction.setSmsReference(generateSmsReference());
-            
+
             // Initiate the transaction
             return initiateTransaction(transaction);
-            
         } catch (Exception e) {
             throw new TransactionException("Failed to process encrypted transaction: " + e.getMessage(), e);
         }
@@ -76,6 +114,16 @@ public class TransactionServiceImpl implements TransactionService {
     
     private String generateSmsReference() {
         return "SMS" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+    }
+
+    private static String calculateHmac(String data, String base64Key) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(Base64.getDecoder().decode(base64Key), "HmacSHA256");
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(secretKey);
+        byte[] hmacBytes = mac.doFinal(data.getBytes("UTF-8"));
+        return Base64.getEncoder().withoutPadding().encodeToString(hmacBytes)
+            .replace('+', '-')
+            .replace('/', '_');
     }
 
     @Override
@@ -106,7 +154,8 @@ public class TransactionServiceImpl implements TransactionService {
         // Set initial transaction details
         transaction.setStatus(Transaction.TransactionStatus.PENDING);
         transaction.setInitiatedAt(LocalDateTime.now());
-        
+        transaction.setType(transaction.getType());
+        System.out.println(transaction.getType());
         // Save transaction first to get the ID
         Transaction savedTransaction = transactionRepository.save(transaction);
         

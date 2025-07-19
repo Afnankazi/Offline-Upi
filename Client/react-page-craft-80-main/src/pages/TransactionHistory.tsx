@@ -21,7 +21,7 @@ interface Transaction {
   status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'OFFLINE_PENDING';
   initiatedAt: string;
   completedAt: string | null;
-  isOfflineTransaction: boolean;
+  type: string | null
 }
 
 // Group transactions by date
