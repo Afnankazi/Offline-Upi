@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
@@ -20,6 +21,8 @@ export default {
 		},
 		extend: {
 			colors: {
+				'seva-green': '#10B981',
+				'seva-gold': '#F59E0B',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -89,7 +92,8 @@ export default {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
-		}
-	},
-	plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+		},
+		plugins: [tailwindcssAnimate],
+		plugins: [require("tailwindcss-animate")],
+		content: []
+	} satisfies Config;

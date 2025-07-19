@@ -221,57 +221,99 @@ const QRCodeScanner = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-teal-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-teal-900">
-        <button onClick={handleBack} className="text-white">
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <h1 className="text-lg font-medium text-white">Scan QR Code</h1>
-        <button onClick={() => navigate('/dashboard')} className="text-white">
-          <Home className="h-6 w-6" />
-        </button>
+      <header className="bg-white border-b px-6 py-4 sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto flex justify-between items-center">
+          <button 
+            onClick={handleBack} 
+            className="p-2 rounded-xl hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+            Scan QR Code
+          </h1>
+          <button 
+            onClick={() => navigate('/dashboard')} 
+            className="p-2 rounded-xl hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            <Home className="h-5 w-5" />
+          </button>
+        </div>
       </header>
 
       {/* Scanner Container */}
       <div className="flex-1 flex flex-col items-center justify-center p-4">
-        <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-md">
-          {cameraError ? (
-            <div className="text-center p-4">
-              <p className="text-red-500 mb-4">{cameraError}</p>
-              <Button onClick={handleRetry} className="bg-teal-600 hover:bg-teal-700">
-                Retry Camera Access
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="w-full relative">
-                {/* Only render the qr-reader div when camera is active or about to be activated */}
-                <div id="qr-reader" className="w-full"></div>
-              </div>
-              <div className="flex justify-center mt-4">
+        <div className="w-full max-w-md space-y-6">
+          {/* Scanner Card */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            {cameraError ? (
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                  <CameraOff className="h-8 w-8 text-red-500" />
+                </div>
+                <p className="text-red-500 mb-6">{cameraError}</p>
                 <Button 
-                  onClick={toggleCamera} 
-                  className={`${isCameraActive ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-600 hover:bg-teal-700'} text-white`}
+                  onClick={handleRetry}
+                  className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6"
                 >
-                  {isCameraActive ? (
-                    <>
-                      <CameraOff className="h-4 w-4 mr-2" />
-                      Stop Camera
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="h-4 w-4 mr-2" />
-                      Start Camera
-                    </>
-                  )}
+                  <Camera className="h-4 w-4 mr-2" />
+                  Retry Camera Access
                 </Button>
               </div>
-              <p className="text-center mt-4 text-gray-600">
-                Position the QR code within the frame to scan
-              </p>
-            </>
-          )}
+            ) : (
+              <>
+                <div className="relative bg-gray-900 aspect-square">
+                  {/* Scanner overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+                  
+                  {/* Scanner frame */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-64 h-64 border-2 border-white/50 rounded-2xl relative">
+                      <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400" />
+                      <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400" />
+                      <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400" />
+                      <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400" />
+                    </div>
+                  </div>
+                  
+                  {/* QR reader container */}
+                  <div id="qr-reader" className="w-full h-full"></div>
+                </div>
+
+                {/* Controls */}
+                <div className="p-6 bg-white border-t border-gray-100">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Button 
+                      onClick={toggleCamera}
+                      className={`w-full h-12 rounded-xl flex items-center justify-center transition-all ${
+                        isCameraActive 
+                          ? 'bg-red-500 hover:bg-red-600' 
+                          : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'
+                      }`}
+                    >
+                      {isCameraActive ? (
+                        <>
+                          <CameraOff className="h-5 w-5 mr-2" />
+                          Stop Camera
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-5 w-5 mr-2" />
+                          Start Camera
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-sm text-gray-500 flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2" />
+                      Position the QR code within the frame
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -151,69 +151,88 @@ const Profile = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-600">
       {/* Header */}
-      <header className="bg-seva-green text-white p-4">
-        <div className="container max-w-md mx-auto">
-          <button 
-            onClick={() => navigate(-1)}
-            className="mb-2 text-white flex items-center"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-          </button>
-          <h1 className="text-2xl font-bold">Profile Settings</h1>
-          <p className="text-white/80 text-sm">
-            Update your profile information
-          </p>
+      <div className="flex items-center justify-between p-4 text-white">
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center space-x-2 hover:opacity-80"
+        >
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </button>
+        
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+            </div>
+          </div>
+          <span className="font-semibold">Digital Bharat Pay</span>
         </div>
-      </header>
+        
+        <div className="w-8"></div> {/* Spacer for layout balance */}
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 p-4">
-        <div className="container max-w-md mx-auto">
-          {/* Profile Section */}
-          <section className="mb-6">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-seva-green rounded-full flex items-center justify-center mr-3">
-                  <UserRound className="h-6 w-6 text-white" />
+      <div className="px-4 pb-8">
+        {/* Welcome Section */}
+        <div className="text-center text-white mb-8">
+          <h1 className="text-2xl font-bold mb-2">Profile Settings</h1>
+          <p className="text-blue-100">Manage your account information</p>
+        </div>
+
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            {/* Profile Avatar */}
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-6">
+              <div className="flex items-center">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mr-4">
+                  <UserRound className="h-8 w-8 text-blue-600" />
                 </div>
-                <div>
-                  <h2 className="text-lg font-medium">{name}</h2>
-                  <p className="text-sm text-gray-500">{upiId}</p>
+                <div className="text-white">
+                  <h2 className="text-xl font-semibold">{name}</h2>
+                  <p className="text-blue-100">{upiId}</p>
                 </div>
               </div>
+            </div>
 
+            {/* Form Content */}
+            <div className="p-6 space-y-6">
               {/* Profile Update Form */}
-              <div className="mb-6">
-                <Label htmlFor="name" className="flex items-center mb-2 text-gray-700">
-                  <User className="h-4 w-4 mr-2 text-seva-green" />
-                  Update Name
-                </Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mb-3"
-                  placeholder="Enter your name"
-                />
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name" className="flex items-center text-gray-700 mb-2">
+                    <User className="h-4 w-4 mr-2 text-blue-600" />
+                    Update Name
+                  </Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="h-12 border-gray-200"
+                    placeholder="Enter your name"
+                  />
+                </div>
 
-                <Label htmlFor="upiId" className="flex items-center mb-2 text-gray-700">
-                  <AtSign className="h-4 w-4 mr-2 text-seva-green" />
-                  Update UPI ID
-                </Label>
-                <Input
-                  id="upiId"
-                  value={upiId}
-                  onChange={(e) => setUpiId(e.target.value)}
-                  className="mb-3"
-                  placeholder="username@bankname"
-                />
+                <div>
+                  <Label htmlFor="upiId" className="flex items-center text-gray-700 mb-2">
+                    <AtSign className="h-4 w-4 mr-2 text-blue-600" />
+                    Update UPI ID
+                  </Label>
+                  <Input
+                    id="upiId"
+                    value={upiId}
+                    onChange={(e) => setUpiId(e.target.value)}
+                    className="h-12 border-gray-200"
+                    placeholder="username@bankname"
+                  />
+                </div>
 
                 <Button 
                   onClick={handleProfileUpdate}
                   disabled={isLoading}
-                  className="w-full bg-seva-green hover:bg-seva-green/90 text-white"
+                  className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
@@ -230,9 +249,9 @@ const Profile = () => {
               </div>
 
               {/* PIN Update Form */}
-              <div className="mb-6">
-                <Label className="flex items-center mb-2 text-gray-700">
-                  <Lock className="h-4 w-4 mr-2 text-seva-green" />
+              <div className="space-y-4 pt-4 border-t">
+                <Label className="flex items-center text-gray-700 mb-2">
+                  <Lock className="h-4 w-4 mr-2 text-blue-600" />
                   Update PIN
                 </Label>
                 <div className="space-y-3">
@@ -244,7 +263,7 @@ const Profile = () => {
                     maxLength={6}
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    className="border-gray-300 focus:border-seva-green focus:ring-seva-green"
+                    className="h-12 border-gray-200"
                   />
                   <Input
                     type="password"
@@ -254,7 +273,7 @@ const Profile = () => {
                     maxLength={6}
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    className="border-gray-300 focus:border-seva-green focus:ring-seva-green"
+                    className="h-12 border-gray-200"
                   />
                   <Input
                     type="password"
@@ -264,12 +283,12 @@ const Profile = () => {
                     maxLength={6}
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    className="border-gray-300 focus:border-seva-green focus:ring-seva-green"
+                    className="h-12 border-gray-200"
                   />
                   <Button 
                     onClick={handlePinUpdate}
                     disabled={isLoading}
-                    className="w-full bg-seva-green hover:bg-seva-green/90 text-white"
+                    className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     {isLoading ? (
                       <div className="flex items-center justify-center">
@@ -290,7 +309,7 @@ const Profile = () => {
               <Button 
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="w-full border-red-500 text-red-500 hover:bg-red-50"
+                className="w-full h-12 border-2 border-red-500 text-red-500 hover:bg-red-50"
                 variant="outline"
               >
                 {isLoggingOut ? (
@@ -306,9 +325,17 @@ const Profile = () => {
                 )}
               </Button>
             </div>
-          </section>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-6 flex items-center justify-center text-white">
+            <div className="flex items-center space-x-2 text-sm">
+              <Lock className="w-4 h-4" />
+              <span>Your data is secure with us</span>
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

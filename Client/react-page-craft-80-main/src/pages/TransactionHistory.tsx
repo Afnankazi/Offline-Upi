@@ -231,244 +231,299 @@ const TransactionHistory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-600">
       {/* Header */}
-      <header className="px-4 py-4 flex justify-between items-center bg-teal-800 text-white">
-        <div className="flex items-center">
+      <header className="px-6 py-4 flex justify-between items-center text-white">
+        <div className="flex items-center space-x-4">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => navigate(-1)}
-            className="text-white hover:bg-teal-700"
+            className="text-white hover:bg-white/10"
           >
             <ChevronLeft className="h-6 w-6" />
           </Button>
+          <div>
+            <h1 className="text-xl font-semibold">Transaction History</h1>
+            <p className="text-sm text-blue-100">View all your transactions</p>
+          </div>
         </div>
-        <h1 className="text-lg font-medium">Transaction History</h1>
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={handleRefresh}
-          className="text-white hover:bg-teal-700"
+          className="text-white hover:bg-white/10"
           disabled={isRefreshing}
         >
           <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
         </Button>
       </header>
 
-      {/* Summary Statistics */}
-      {!isLoading && transactions.length > 0 && (
-        <div className="bg-white p-4 m-4 rounded-lg shadow-sm">
-          <h2 className="text-base font-medium mb-2">Summary</h2>
-          <div className="flex justify-between text-sm">
-            <p className="text-red-600">Total Sent:</p>
-            <p className="text-red-600">₹{totalDebit.toFixed(2)}</p>
-          </div>
-          <div className="flex justify-between text-sm mt-1">
-            <p className="text-green-600">Total Received:</p>
-            <p className="text-green-600">₹{totalCredit.toFixed(2)}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-teal-800 mb-2" />
-            <p className="text-gray-600">Loading transactions...</p>
-          </div>
-        </div>
-      ) : (
-        /* Transaction List */
-      <div className="flex-1 px-4 py-2">
-        {/* Today Section */}
-          {groupedTransactions.today.length > 0 && (
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-xs font-medium text-gray-500">TODAY</p>
-              </div>
-              {groupedTransactions.today.map((transaction) => (
-                <div key={transaction.transactionId} className="flex items-center mb-4 bg-white p-3 rounded-lg shadow-sm">
-                  <div className={`w-10 h-10 ${getTransactionColor(transaction)} rounded-lg flex items-center justify-center mr-3`}>
-                    {getTransactionIcon(transaction)}
-              </div>
-              <div className="flex-1">
-                    <div className="flex justify-between">
-                      <p className="font-medium">{getTransactionName(transaction)}</p>
-                      <p className={`font-medium ${transaction.transactionType === 'DEBIT' ? 'text-red-500' : 'text-green-500'}`}>
-                        {getTransactionAmount(transaction)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
-                        transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
-                        transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {transaction.status}
-                      </span>
+      {/* Main Content */}
+      <div className="px-4 pb-8">
+        <div className="max-w-3xl mx-auto">
+          {/* Summary Statistics */}
+          {!isLoading && transactions.length > 0 && (
+            <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl mb-6 text-white">
+              <h2 className="text-lg font-semibold mb-4">Summary</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <p className="text-blue-100 text-sm mb-1">Total Sent</p>
+                  <p className="text-2xl font-bold">₹{totalDebit.toFixed(2)}</p>
+                </div>
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <p className="text-blue-100 text-sm mb-1">Total Received</p>
+                  <p className="text-2xl font-bold">₹{totalCredit.toFixed(2)}</p>
                 </div>
               </div>
             </div>
-          ))}
+          )}
+
+          {/* Loading State */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center text-white">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p className="text-blue-100">Loading transactions...</p>
+              </div>
+            </div>
+          ) : (
+            /* Transaction List Container */
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              {/* Transaction Sections */}
+              <div className="divide-y divide-gray-100">
+                {/* Today Section */}
+                {groupedTransactions.today.length > 0 && (
+                  <div className="p-4">
+                    <p className="text-xs font-medium text-gray-500 mb-4">TODAY</p>
+                    <div className="space-y-4">
+                      {groupedTransactions.today.map((transaction) => (
+                        <div key={transaction.transactionId} 
+                          className="flex items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                        >
+                          <div className={`w-12 h-12 ${
+                            transaction.transactionType === 'DEBIT' ? 'bg-blue-600' : 'bg-green-600'
+                          } rounded-xl flex items-center justify-center mr-4`}>
+                            {getTransactionIcon(transaction)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-gray-900">{getTransactionName(transaction)}</p>
+                                <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className={`font-medium ${
+                                  transaction.transactionType === 'DEBIT' ? 'text-blue-600' : 'text-green-600'
+                                }`}>
+                                  {getTransactionAmount(transaction)}
+                                </p>
+                                <span className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${
+                                  transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
+                                  transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                                  transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {transaction.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Yesterday Section */}
+                {groupedTransactions.yesterday.length > 0 && (
+                  <div className="p-4">
+                    <p className="text-xs font-medium text-gray-500 mb-4">YESTERDAY</p>
+                    <div className="space-y-4">
+                      {groupedTransactions.yesterday.map((transaction) => (
+                        <div key={transaction.transactionId} 
+                          className="flex items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                        >
+                          <div className={`w-12 h-12 ${
+                            transaction.transactionType === 'DEBIT' ? 'bg-blue-600' : 'bg-green-600'
+                          } rounded-xl flex items-center justify-center mr-4`}>
+                            {getTransactionIcon(transaction)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-gray-900">{getTransactionName(transaction)}</p>
+                                <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className={`font-medium ${
+                                  transaction.transactionType === 'DEBIT' ? 'text-blue-600' : 'text-green-600'
+                                }`}>
+                                  {getTransactionAmount(transaction)}
+                                </p>
+                                <span className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${
+                                  transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
+                                  transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                                  transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {transaction.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Last 7 Days Section */}
+                {groupedTransactions.lastSevenDays.length > 0 && (
+                  <div className="p-4">
+                    <p className="text-xs font-medium text-gray-500 mb-4">LAST 7 DAYS</p>
+                    <div className="space-y-4">
+                      {groupedTransactions.lastSevenDays.map((transaction) => (
+                        <div key={transaction.transactionId} 
+                          className="flex items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                        >
+                          <div className={`w-12 h-12 ${
+                            transaction.transactionType === 'DEBIT' ? 'bg-blue-600' : 'bg-green-600'
+                          } rounded-xl flex items-center justify-center mr-4`}>
+                            {getTransactionIcon(transaction)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-gray-900">{getTransactionName(transaction)}</p>
+                                <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className={`font-medium ${
+                                  transaction.transactionType === 'DEBIT' ? 'text-blue-600' : 'text-green-600'
+                                }`}>
+                                  {getTransactionAmount(transaction)}
+                                </p>
+                                <span className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${
+                                  transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
+                                  transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                                  transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {transaction.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Older Transactions Section */}
+                {groupedTransactions.older.length > 0 && (
+                  <div className="p-4">
+                    <p className="text-xs font-medium text-gray-500 mb-4">OLDER TRANSACTIONS</p>
+                    <div className="space-y-4">
+                      {groupedTransactions.older.map((transaction) => (
+                        <div key={transaction.transactionId} 
+                          className="flex items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                        >
+                          <div className={`w-12 h-12 ${
+                            transaction.transactionType === 'DEBIT' ? 'bg-blue-600' : 'bg-green-600'
+                          } rounded-xl flex items-center justify-center mr-4`}>
+                            {getTransactionIcon(transaction)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-gray-900">{getTransactionName(transaction)}</p>
+                                <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className={`font-medium ${
+                                  transaction.transactionType === 'DEBIT' ? 'text-blue-600' : 'text-green-600'
+                                }`}>
+                                  {getTransactionAmount(transaction)}
+                                </p>
+                                <span className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${
+                                  transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
+                                  transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                                  transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {transaction.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* All Transactions Section (if no groups match) */}
+                {transactions.length > 0 && groupedTransactions.today.length === 0 && groupedTransactions.yesterday.length === 0 && groupedTransactions.lastSevenDays.length === 0 && groupedTransactions.older.length === 0 && (
+                  <div className="p-4">
+                    <p className="text-xs font-medium text-gray-500 mb-4">ALL TRANSACTIONS</p>
+                    <div className="space-y-4">
+                      {transactions.map((transaction) => (
+                        <div key={transaction.transactionId} 
+                          className="flex items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                        >
+                          <div className={`w-12 h-12 ${
+                            transaction.transactionType === 'DEBIT' ? 'bg-blue-600' : 'bg-green-600'
+                          } rounded-xl flex items-center justify-center mr-4`}>
+                            {getTransactionIcon(transaction)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-gray-900">{getTransactionName(transaction)}</p>
+                                <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className={`font-medium ${
+                                  transaction.transactionType === 'DEBIT' ? 'text-blue-600' : 'text-green-600'
+                                }`}>
+                                  {getTransactionAmount(transaction)}
+                                </p>
+                                <span className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${
+                                  transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
+                                  transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                                  transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {transaction.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No Transactions Message */}
+                {transactions.length === 0 && !isLoading && (
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <div className="bg-blue-50 p-6 rounded-full mb-4">
+                      <CheckCircle className="h-12 w-12 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No transactions yet</h3>
+                    <p className="text-gray-500 text-center max-w-sm">
+                      Your transaction history will appear here once you start making transactions
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-          )}
-
-        {/* Yesterday Section */}
-          {groupedTransactions.yesterday.length > 0 && (
-        <div className="mb-4">
-          <div className="mb-2">
-            <p className="text-xs font-medium text-gray-500">YESTERDAY</p>
-          </div>
-              {groupedTransactions.yesterday.map((transaction) => (
-                <div key={transaction.transactionId} className="flex items-center mb-4 bg-white p-3 rounded-lg shadow-sm">
-                  <div className={`w-10 h-10 ${getTransactionColor(transaction)} rounded-lg flex items-center justify-center mr-3`}>
-                    {getTransactionIcon(transaction)}
-                  </div>
-              <div className="flex-1">
-                    <div className="flex justify-between">
-                      <p className="font-medium">{getTransactionName(transaction)}</p>
-                      <p className={`font-medium ${transaction.transactionType === 'DEBIT' ? 'text-red-500' : 'text-green-500'}`}>
-                        {getTransactionAmount(transaction)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
-                        transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
-                        transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {transaction.status}
-                      </span>
-                    </div>
-              </div>
-            </div>
-          ))}
-        </div>
-          )}
-
-        {/* Last 7 Days Section */}
-          {groupedTransactions.lastSevenDays.length > 0 && (
-        <div className="mb-4">
-          <div className="mb-2">
-                <p className="text-xs font-medium text-gray-500">LAST 7 DAYS</p>
-              </div>
-              {groupedTransactions.lastSevenDays.map((transaction) => (
-                <div key={transaction.transactionId} className="flex items-center mb-4 bg-white p-3 rounded-lg shadow-sm">
-                  <div className={`w-10 h-10 ${getTransactionColor(transaction)} rounded-lg flex items-center justify-center mr-3`}>
-                    {getTransactionIcon(transaction)}
-          </div>
-              <div className="flex-1">
-                    <div className="flex justify-between">
-                      <p className="font-medium">{getTransactionName(transaction)}</p>
-                      <p className={`font-medium ${transaction.transactionType === 'DEBIT' ? 'text-red-500' : 'text-green-500'}`}>
-                        {getTransactionAmount(transaction)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
-                        transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
-                        transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {transaction.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Older Transactions Section */}
-          {groupedTransactions.older.length > 0 && (
-            <div>
-              <div className="mb-2">
-                <p className="text-xs font-medium text-gray-500">OLDER TRANSACTIONS</p>
-              </div>
-              {groupedTransactions.older.map((transaction) => (
-                <div key={transaction.transactionId} className="flex items-center mb-4 bg-white p-3 rounded-lg shadow-sm">
-                  <div className={`w-10 h-10 ${getTransactionColor(transaction)} rounded-lg flex items-center justify-center mr-3`}>
-                    {getTransactionIcon(transaction)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <p className="font-medium">{getTransactionName(transaction)}</p>
-                      <p className={`font-medium ${transaction.transactionType === 'DEBIT' ? 'text-red-500' : 'text-green-500'}`}>
-                        {getTransactionAmount(transaction)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
-                        transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
-                        transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {transaction.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* All Transactions Section (if no groups match) */}
-          {transactions.length > 0 && groupedTransactions.today.length === 0 && groupedTransactions.yesterday.length === 0 && groupedTransactions.lastSevenDays.length === 0 && groupedTransactions.older.length === 0 && (
-            <div>
-              <div className="mb-2">
-                <p className="text-xs font-medium text-gray-500">ALL TRANSACTIONS</p>
-              </div>
-              {transactions.map((transaction) => (
-                <div key={transaction.transactionId} className="flex items-center mb-4 bg-white p-3 rounded-lg shadow-sm">
-                  <div className={`w-10 h-10 ${getTransactionColor(transaction)} rounded-lg flex items-center justify-center mr-3`}>
-                    {getTransactionIcon(transaction)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <p className="font-medium">{getTransactionName(transaction)}</p>
-                      <p className={`font-medium ${transaction.transactionType === 'DEBIT' ? 'text-red-500' : 'text-green-500'}`}>
-                        {getTransactionAmount(transaction)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-500">{formatDate(transaction.initiatedAt)}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
-                        transaction.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
-                        transaction.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {transaction.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* No Transactions Message */}
-          {transactions.length === 0 && !isLoading && (
-            <div className="flex flex-col items-center justify-center py-10">
-              <div className="bg-gray-100 p-4 rounded-full mb-4">
-                <CheckCircle className="h-8 w-8 text-gray-400" />
-              </div>
-              <p className="text-gray-500 text-center">No transactions found</p>
-              <p className="text-gray-400 text-sm text-center mt-1">Your transaction history will appear here</p>
-            </div>
-          )}
-        </div>
-      )}
+      </div>
     </div>
   );
 };

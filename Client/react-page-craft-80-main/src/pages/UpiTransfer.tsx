@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Send } from 'lucide-react';
+import { ChevronLeft, Send, QrCode, ArrowRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PinConfirmation from '@/components/PinConfirmation';
@@ -129,7 +129,7 @@ const UpiTransfer = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-600">
       {currentStep === 'pin-confirmation' ? (
         <PinConfirmation 
           onCancel={handlePinCancel}
@@ -139,80 +139,118 @@ const UpiTransfer = () => {
       ) : (
         <>
           {/* Header */}
-          <header className="flex items-center px-4 py-3 border-b">
-            <button onClick={handleBack} className="text-gray-700">
+          <header className="flex items-center px-6 py-4 text-white">
+            <button 
+              onClick={handleBack} 
+              className="hover:bg-white/10 p-2 rounded-full transition-colors"
+            >
               <ChevronLeft className="h-6 w-6" />
             </button>
-            <h1 className="ml-4 text-lg font-medium text-gray-800">UPI Transfer</h1>
+            <h1 className="ml-4 text-xl font-semibold">UPI Transfer</h1>
           </header>
 
           {/* Content */}
-          <div className="flex-1 flex flex-col p-6">
-            {currentStep === 'upi-input' ? (
-              <>
-                <h2 className="text-xl font-medium text-gray-800 mb-2">Enter UPI ID</h2>
-                <p className="text-gray-500 text-sm mb-8">
-                  Pay any <span className="font-semibold">UPI</span> app using UPI ID
-                </p>
-
-                {/* UPI Input Field */}
-                <div className="mb-8">
-                  <label className="text-xs text-gray-500 mb-1 block">UPI ID</label>
-                  <Input
-                    type="text" 
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    className="border-gray-300 text-lg py-6"
-                    placeholder="Enter UPI ID"
-                    autoFocus
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 className="text-xl font-medium text-gray-800 mb-2">Enter Amount</h2>
-                <p className="text-gray-500 text-sm mb-6">
-                  How much would you like to send to <span className="font-semibold">{upiId}</span>?
-                </p>
-
-                {/* Amount Input Field */}
-                <div className="mb-8">
-                  <div className="flex items-center bg-seva-cream rounded-lg p-4 mb-6">
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-500 mb-1">Amount</p>
-                      <div className="flex items-center">
-                        <span className="text-gray-700 mr-2 text-xl">₹</span>
-                        <Input
-                          type="text"
-                          inputMode="decimal"
-                          value={amount}
-                          onChange={handleAmountChange}
-                          className="border-none bg-transparent text-3xl font-bold text-gray-800 p-0 focus-visible:ring-0 h-auto"
-                          placeholder="0.00"
-                          autoFocus
-                        />
+          <div className="flex-1 px-6 pb-8">
+            <div className="max-w-md mx-auto">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div className="p-6">
+                  {currentStep === 'upi-input' ? (
+                    <>
+                      <div className="text-center mb-8">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Send Money</h2>
+                        <p className="text-gray-500">
+                          Pay any <span className="text-blue-600 font-medium">UPI</span> app using UPI ID
+                        </p>
                       </div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 text-center">
-                    Transfer fee: <span className="font-semibold">Free</span>
-                  </p>
-                </div>
-              </>
-            )}
 
-            {/* Continue Button */}
-            <Button
-              onClick={handleContinue}
-              disabled={
-                currentStep === 'upi-input' 
-                  ? !upiId.trim()
-                  : !amount.trim()
-              }
-              className="w-full bg-seva-green hover:bg-green-600 text-white py-6 rounded-md text-lg mt-auto"
-            >
-              Continue
-            </Button>
+                      {/* UPI Input Field */}
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                            Enter UPI ID
+                          </label>
+                          <Input
+                            type="text" 
+                            value={upiId}
+                            onChange={(e) => setUpiId(e.target.value)}
+                            className="h-12 border-gray-200"
+                            placeholder="username@bankname"
+                            autoFocus
+                          />
+                        </div>
+
+                        <button 
+                          onClick={() => navigate('/scan')}
+                          className="w-full flex items-center justify-center space-x-2 py-3 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                        >
+                          <QrCode className="h-5 w-5" />
+                          <span>Scan QR Code</span>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-center mb-8">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Enter Amount</h2>
+                        <p className="text-gray-500">
+                          Sending money to <span className="text-blue-600 font-medium">{upiId}</span>
+                        </p>
+                      </div>
+
+                      {/* Amount Input Field */}
+                      <div className="space-y-6">
+                        <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6">
+                          <label className="text-sm font-medium text-gray-600 mb-2 block">
+                            Amount
+                          </label>
+                          <div className="flex items-baseline space-x-2">
+                            <span className="text-2xl text-gray-700">₹</span>
+                            <Input
+                              type="text"
+                              inputMode="decimal"
+                              value={amount}
+                              onChange={handleAmountChange}
+                              className="text-4xl font-bold border-none bg-transparent focus-visible:ring-0 h-auto p-0 w-full"
+                              placeholder="0.00"
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Transfer fee: <span className="font-medium">Free</span></span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Continue Button */}
+                <div className="px-6 pb-6">
+                  <Button
+                    onClick={handleContinue}
+                    disabled={
+                      currentStep === 'upi-input' 
+                        ? !upiId.trim()
+                        : !amount.trim()
+                    }
+                    className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center justify-center space-x-2"
+                  >
+                    <span>Continue</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Security Badge */}
+              <div className="mt-6 flex items-center justify-center text-white/80">
+                <div className="flex items-center space-x-2 text-sm">
+                  <Send className="w-4 h-4" />
+                  <span>Secure • Instant • Free</span>
+                </div>
+              </div>
+            </div>
           </div>
         </>
       )}
