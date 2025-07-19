@@ -158,21 +158,40 @@ const Login = () => {
   const handleBiometricLogin = async () => {
     try {
       setIsLoading(true);
+      
+      if (!upiId) {
+        toast({
+          title: "UPI ID Required",
+          description: "Please enter your UPI ID first",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const isAuthenticated = await authenticateWithBiometric(upiId);
       
       if (isAuthenticated) {
-        // Get stored credentials
         const storedPin = localStorage.getItem('userPin');
         if (storedPin) {
-          // Use the stored PIN to login
           setPin(storedPin);
           handleLogin(new Event('submit') as any);
         }
       }
     } catch (error) {
+      console.error('Biometric login error:', error);
+      let errorMessage = "Please use your PIN instead";
+      
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage = "Biometric authentication was denied";
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = "Your device doesn't support biometric authentication";
+        }
+      }
+      
       toast({
         title: "Biometric Authentication Failed",
-        description: "Please use your PIN instead",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -270,12 +289,31 @@ const Login = () => {
                 <Checkbox 
                   id="enableBiometrics" 
                   checked={biometricsEnabled}
-                  onCheckedChange={(checked) => {
-                    setBiometricsEnabled(checked as boolean);
-                    if (checked) {
-                      localStorage.setItem(`biometrics_${upiId}`, 'true');
-                    } else {
-                      localStorage.removeItem(`biometrics_${upiId}`);
+                  onCheckedChange={async (checked) => {
+                    try {
+                      if (checked) {
+                        // Try to create passkey when enabling biometrics
+                        const created = await createPasskey(upiId);
+                        if (!created) {
+                          toast({
+                            title: "Setup Failed",
+                            description: "Could not set up biometric authentication",
+                            variant: "destructive"
+                          });
+                          return;
+                        }
+                        localStorage.setItem(`biometrics_${upiId}`, 'true');
+                      } else {
+                        localStorage.removeItem(`biometrics_${upiId}`);
+                      }
+                      setBiometricsEnabled(checked as boolean);
+                    } catch (error) {
+                      console.error('Error setting up biometrics:', error);
+                      toast({
+                        title: "Setup Failed",
+                        description: "Could not set up biometric authentication",
+                        variant: "destructive"
+                      });
                     }
                   }}
                 />
