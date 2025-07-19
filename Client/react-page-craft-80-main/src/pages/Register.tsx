@@ -17,18 +17,19 @@ import { SHA256 } from 'crypto-js';
 import { API_BASE_URL } from '@/config';
 import axiosInstance from '@/utils/axios';
 import { AxiosError } from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const registerFormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
+  name: z.string().min(2, { message: "Name_Min_Length" }),
+  email: z.string().email({ message: "Invalid_Email" }),
   birthDate: z.date().optional(),
-  upiId: z.string().min(5, { message: "UPI ID must be at least 5 characters" })
-    .regex(/^[\w.-]+@[\w.-]+$/, { message: "UPI ID must be in the format username@bankname" }),
-  phoneNumber: z.string().min(10, { message: "Phone number must be at least 10 digits" }),
-  pin: z.string().length(6, { message: "PIN must be exactly 6 digits" }).regex(/^\d+$/, { message: "PIN must contain only numbers" }),
-  confirmPin: z.string().length(6, { message: "PIN must be exactly 6 digits" }).regex(/^\d+$/, { message: "PIN must contain only numbers" })
+  upiId: z.string().min(5, { message: "UPI_ID_Min_Length" })
+    .regex(/^[\w.-]+@[\w.-]+$/, { message: "UPI_ID_Format" }),
+  phoneNumber: z.string().min(10, { message: "Phone_Min_Length" }),
+  pin: z.string().length(6, { message: "PIN_Length" }).regex(/^\d+$/, { message: "PIN_Numbers_Only" }),
+  confirmPin: z.string().length(6, { message: "PIN_Length" }).regex(/^\d+$/, { message: "PIN_Numbers_Only" })
 }).refine((data) => data.pin === data.confirmPin, {
-  message: "PINs do not match",
+  message: "PINs_Do_Not_Match",
   path: ["confirmPin"],
 });
 
@@ -37,6 +38,7 @@ type RegisterFormValues = z.infer<typeof registerFormSchema>;
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [showPin, setShowPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,8 +88,8 @@ const Register = () => {
       localStorage.setItem('userPin', data.pin);
       
       toast({
-        title: "Account created",
-        description: "Your account has been created successfully. Please log in.",
+        title: t("Account_Created"),
+        description: t("Account_Created_Description"),
       });
       
       // Redirect to login page after registration
@@ -98,19 +100,19 @@ const Register = () => {
       console.error("Registration error:", error);
       
       // Extract error message if available
-      let errorMessage = "Failed to create account";
+      let errorMessage = t("Account_Creation_Failed");
       if (error instanceof AxiosError) {
         if (error.response?.data?.error) {
-          errorMessage = error.response.data.error;
+          errorMessage = t(error.response.data.error);
         } else if (error.response?.status === 409) {
-          errorMessage = "UPI ID already exists";
+          errorMessage = t("UPI_ID_Exists");
         } else if (!error.response) {
-          errorMessage = "Network error. Please check your connection.";
+          errorMessage = t("Network_Error");
         }
       }
       
       toast({
-        title: "Registration Failed",
+        title: t("Registration_Failed"),
         description: errorMessage,
         variant: "destructive"
       });
@@ -128,7 +130,7 @@ const Register = () => {
           className="flex items-center space-x-2 hover:opacity-80"
         >
           <ArrowLeft size={20} />
-          <span>Back</span>
+          <span>{t("Back")}</span>
         </button>
         
         <div className="flex items-center space-x-2">
@@ -139,16 +141,14 @@ const Register = () => {
           </div>
           <span className="font-semibold">Digital Bharat Pay</span>
         </div>
-        
-        <div className="w-8"></div> {/* Spacer for layout balance */}
       </div>
 
       {/* Main Content */}
       <div className="px-4 pb-8">
         {/* Welcome Section */}
         <div className="text-center text-white mb-8">
-          <h1 className="text-2xl font-bold mb-2">Create Account</h1>
-          <p className="text-blue-100">Join millions of users across India</p>
+          <h1 className="text-2xl font-bold mb-2">{t("Create Account")}</h1>
+          <p className="text-blue-100">{t("Join millions of users across India")}</p>
         </div>
 
         {/* Registration Form Container */}
@@ -158,7 +158,7 @@ const Register = () => {
             <div className="bg-gray-50 px-6 py-3 flex items-center justify-center space-x-6">
               <div className="flex items-center space-x-2">
                 <Shield className="w-4 h-4 text-blue-500" />
-                <span className="text-sm text-gray-600">Secure Registration</span>
+                <span className="text-sm text-gray-600">{t("Secure_Registration")}</span>
               </div>
             </div>
 
@@ -171,15 +171,15 @@ const Register = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Full Name</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">{t("Full_Name")}</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Enter your full name" 
+                          placeholder={t("Enter_Full_Name")} 
                           className="h-12 border-gray-200" 
                           {...field} 
                         />
                       </FormControl>
-                      <FormMessage className="text-xs" />
+                      <FormMessage className="text-xs">{t(form.formState.errors.name?.message || "")}</FormMessage>
                     </FormItem>
                   )}
                 />
@@ -190,7 +190,7 @@ const Register = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Email</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">{t("Email")}</FormLabel>
                       <FormControl>
                         <Input 
                           type="email" 
@@ -210,15 +210,15 @@ const Register = () => {
                   name="upiId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">UPI ID</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">{t("UPI ID")}</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="username@bankname" 
+                          placeholder={t("username@bankname")} 
                           className="h-12 border-gray-200" 
                           {...field} 
                         />
                       </FormControl>
-                      <p className="text-xs text-gray-500 mt-1">Format: username@bankname</p>
+                      <p className="text-xs text-gray-500 mt-1">{t("Format:_username@bankname")}</p>
                       <FormMessage className="text-xs" />
                     </FormItem>
                   )}
@@ -230,7 +230,7 @@ const Register = () => {
                   name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Phone Number</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">{t("Phone Number")}</FormLabel>
                       <FormControl>
                         <div className="flex">
                           <div className="bg-gray-50 border border-gray-200 rounded-l-md px-3 flex items-center">
@@ -239,7 +239,7 @@ const Register = () => {
                           <Input 
                             className="h-12 rounded-l-none border-gray-200" 
                             type="tel" 
-                            placeholder="Enter phone number" 
+                            placeholder={t("Enter_phone_number")} 
                             {...field} 
                           />
                         </div>
@@ -256,12 +256,12 @@ const Register = () => {
                     name="pin"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">Create PIN</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-700">{t("Create Pin")}</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input 
                               type={showPin ? "text" : "password"} 
-                              placeholder="6-digit PIN" 
+                              placeholder={t("6-digit_PIN")} 
                               className="h-12 border-gray-200" 
                               maxLength={6}
                               inputMode="numeric"
@@ -287,12 +287,12 @@ const Register = () => {
                     name="confirmPin"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">Confirm PIN</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-700">{t("Conf_pin")}</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input 
                               type={showConfirmPin ? "text" : "password"} 
-                              placeholder="Confirm 6-digit PIN" 
+                              placeholder={t("Confirm_6-digit_PIN")} 
                               className="h-12 border-gray-200" 
                               maxLength={6}
                               inputMode="numeric"
@@ -320,18 +320,18 @@ const Register = () => {
                   className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Creating Account..." : "Create Account"}
+                  {isSubmitting ? t("Creating_Account") : t("Create_Account")}
                 </Button>
 
                 {/* Login Link */}
                 <div className="text-center text-sm text-gray-600">
-                  Already have an account?{' '}
+                  {t("Already_Have_Account")}{' '}
                   <button 
                     type="button"
                     onClick={() => navigate('/')}
                     className="text-blue-600 hover:text-blue-700 font-medium"
                   >
-                    Log In
+                    {t("Log_In")}
                   </button>
                 </div>
               </form>
@@ -342,7 +342,7 @@ const Register = () => {
           <div className="mt-6 flex items-center justify-center text-white">
             <div className="flex items-center space-x-2 text-sm">
               <Shield className="w-4 h-4" />
-              <span>Bank Grade Security • RBI Compliant</span>
+              <span>{t("Security_Footer")}</span>
             </div>
           </div>
         </div>

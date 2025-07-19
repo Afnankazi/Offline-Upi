@@ -9,17 +9,18 @@ import { Eye, EyeOff, Fingerprint, Shield, ArrowLeft } from 'lucide-react';
 import { SHA256 } from 'crypto-js';
 import axiosInstance from '@/utils/axios';
 import { AxiosError } from 'axios';
-import { isBiometricSupported, authenticateWithBiometric } from '../utils/biometrics';
+import { useTranslation } from 'react-i18next';
+
 
 const Login = () => {
+  const { t } = useTranslation();
   const [upiId, setUpiId] = useState('');
   const [pin, setPin] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpiIdFocused, setIsUpiIdFocused] = useState(false);
-  const [isBiometricsAvailable, setIsBiometricsAvailable] = useState(false);
-  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
+
   const navigate = useNavigate();
   const { toast } = useToast();
   const pinInputRef = React.useRef<HTMLInputElement>(null);
@@ -40,17 +41,7 @@ const Login = () => {
   }, []);
 
   // Check biometric support
-  useEffect(() => {
-    const checkBiometricSupport = async () => {
-      const isSupported = await isBiometricSupported();
-      setIsBiometricsAvailable(isSupported);
-      // Check if user has enabled biometrics for their account
-      const biometricsEnabled = localStorage.getItem(`biometrics_${upiId}`);
-      setBiometricsEnabled(!!biometricsEnabled);
-    };
-    
-    checkBiometricSupport();
-  }, [upiId]);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,15 +158,8 @@ const Login = () => {
         return;
       }
 
-      const isAuthenticated = await authenticateWithBiometric(upiId);
       
-      if (isAuthenticated) {
-        const storedPin = localStorage.getItem('userPin');
-        if (storedPin) {
-          setPin(storedPin);
-          handleLogin(new Event('submit') as any);
-        }
-      }
+  
     } catch (error) {
       console.error('Biometric login error:', error);
       let errorMessage = "Please use your PIN instead";
@@ -259,13 +243,13 @@ const Login = () => {
             className="flex items-center space-x-2 hover:opacity-80"
           >
             <ArrowLeft size={20} />
-            <span>Back</span>
+            <span>{t("Back")}</span>
           </button>
           <div>
             <div className="font-semibold text-lg">Digital Bharat Pay</div>
             <div className="text-xs text-blue-200 flex items-center">
               <Shield className="w-3 h-3 mr-1" />
-              Secure Login
+              {t("Secure_Login")}
             </div>
           </div>
         </div>
@@ -277,14 +261,14 @@ const Login = () => {
           <div className="bg-white rounded-2xl shadow-lg p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome Back</h1>
-              <p className="text-gray-600">Sign in to your account to continue</p>
+              <h1 className="text-2xl font-bold text-gray-800 mb-2">{t("Welcome_Message")}</h1>
+              <p className="text-gray-600">{t("Sign in to your account to continue")}</p>
             </div>
 
             {/* Login Form */}
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="upiId" className="text-gray-700">UPI ID</Label>
+                <Label htmlFor="upiId" className="text-gray-700">{t("UPI_ID")}</Label>
                 <Input 
                   id="upiId"
                   type="text"
@@ -299,7 +283,7 @@ const Login = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pin" className="text-gray-700">PIN</Label>
+                <Label htmlFor="pin" className="text-gray-700">{t("PIN")}</Label>
                 <div className="relative">
                   <Input 
                     id="pin"
@@ -307,7 +291,7 @@ const Login = () => {
                     type={showPin ? "text" : "password"}
                     value={pin}
                     onChange={(e) => setPin(e.target.value)}
-                    placeholder="Enter 6-digit PIN"
+                    placeholder={t("Enter_6_digit_PIN")}
                     maxLength={6}
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -324,7 +308,6 @@ const Login = () => {
                 </div>
               </div>
 
-
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -336,73 +319,36 @@ const Login = () => {
                     htmlFor="rememberMe" 
                     className="text-sm text-gray-600 cursor-pointer"
                   >
-                    Remember UPI ID
+                    {t("Remember UPI ID")}
                   </Label>
                 </div>
                 
                 <button 
                   type="button"
                   className="text-sm text-blue-600 hover:text-blue-700"
-
                 >
-                  Forgot PIN?
+                  {t("Forgot_PIN")}
                 </button>
               </div>
-
-              {/* Biometric Option */}
-              {isBiometricsAvailable && (
-                <div className="flex items-center space-x-2 py-2">
-                  <Checkbox 
-                    id="enableBiometrics" 
-                    checked={biometricsEnabled}
-                    onCheckedChange={(checked) => {
-                      setBiometricsEnabled(checked as boolean);
-                      if (checked) {
-                        localStorage.setItem(`biometrics_${upiId}`, 'true');
-                      } else {
-                        localStorage.removeItem(`biometrics_${upiId}`);
-                      }
-                    }}
-                  />
-                  <Label 
-                    htmlFor="enableBiometrics" 
-                    className="text-sm text-gray-600 cursor-pointer"
-                  >
-                    Enable fingerprint login
-                  </Label>
-                </div>
-              )}
 
               <Button 
                 type="submit" 
                 className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
                 disabled={isLoading}
               >
-                {isLoading ? "Logging in..." : "Log In"}
+                {isLoading ? t("Logging_in") : t("Login")}
               </Button>
-
-              {biometricsEnabled && (
-                <Button
-                  type="button"
-                  onClick={handleBiometricLogin}
-                  className="w-full h-12 flex items-center justify-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg"
-                  disabled={isLoading}
-                >
-                  <Fingerprint className="w-5 h-5" />
-                  <span>Login with Fingerprint</span>
-                </Button>
-              )}
             </form>
 
             {/* Sign Up Link */}
             <div className="mt-8 text-center">
               <p className="text-gray-600">
-                Don't have an account?{' '}
+                {t("Dont_have_account")}{' '}
                 <button 
                   onClick={() => navigate('/register')}
                   className="text-blue-600 hover:text-blue-700 font-medium"
                 >
-                  Sign Up
+                  {t("Sign_Up")}
                 </button>
               </p>
             </div>
@@ -410,7 +356,7 @@ const Login = () => {
             {/* Security Badge */}
             <div className="mt-8 flex items-center justify-center text-gray-500">
               <Shield className="w-4 h-4 mr-2" />
-              <span className="text-sm">Bank grade security</span>
+              <span className="text-sm">{t("Bank_Grade_Security")}</span>
             </div>
           </div>
         </div>

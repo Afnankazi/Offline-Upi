@@ -1,23 +1,38 @@
-import React from 'react';
-import Logo from '@/components/Logo';
-import AuthButtons from '@/components/AuthButtons';
-import { useToast } from '@/components/ui/use-toast';
-import { Wifi, Shield, Smartphone } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-
+import React, { useState } from "react";
+import Logo from "@/components/Logo";
+import AuthButtons from "@/components/AuthButtons";
+import { useToast } from "@/components/ui/use-toast";
+import { Wifi, Shield, Smartphone, Globe } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+   const { t, i18n : trans } = useTranslation();
+  const [language, setLanguage] = useState(
+    localStorage.getItem("language") || "en"
+  );
 
   const handleLogin = () => {
-    navigate('/login'); // Navigate to login page
+    navigate("/login"); // Navigate to login page
   };
 
   const handleSignUp = () => {
-    toast({
-      title: "Sign Up",
-      description: "Sign up functionality will be implemented soon.",
-    });
+    navigate("/register"); // Navigate to register page
+  };
+   const handleLanguageChange = (value: string) => {
+    console.log(value);
+    localStorage.setItem('language', value); // First store the value
+    setLanguage(value); // Update local state
+    trans.changeLanguage(value); // Update i18n language
   };
 
   return (
@@ -38,91 +53,128 @@ const Index = () => {
             </div>
           </div>
         </div>
-        <div className="flex items-center space-x-1 text-sm">
-          <div className="w-4 h-4 border border-white rounded-sm flex items-center justify-center">
-            <div className="text-xs">🌐</div>
-          </div>
-          <span>English</span>
-          <div className="text-xs">▼</div>
-        </div>
+           <div className="flex items-center gap-2 text-black">
+  <Select value={language} onValueChange={handleLanguageChange}>
+    <SelectTrigger className="w-[120px] h-8 text-xs">
+      <div className="flex items-center gap-1">
+        <Globe className="h-3 w-3" />
+        {/* The SelectValue component automatically displays the content of the selected item.
+          You can provide a placeholder for when no value is selected.
+        */}
+        <SelectValue placeholder="Language" />
+      </div>
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="en">English</SelectItem>
+      <SelectItem value="hi">हिंदी</SelectItem>
+      <SelectItem value="ml">മലയാളം</SelectItem>
+      <SelectItem value="te">తెలుగు</SelectItem>
+      <SelectItem value="ta">தமிழ்</SelectItem>
+      <SelectItem value="gu">ગુજરાતી</SelectItem>
+      <SelectItem value="pa">ਪੰਜਾਬੀ</SelectItem>
+      <SelectItem value="mr">मराठी</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
         <div className="w-full max-w-4xl mx-auto">
-        
-        {/* Central Icon */}
-        <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 border-4 border-blue-600 rounded-full flex items-center justify-center bg-white">
-            <div className="text-blue-600">
-              <svg className="w-10 h-10" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Title and Description */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-600 mb-4">Easy Offline Payment</h1>
-          <p className="text-gray-600 text-lg mb-6">
-            Empowering Every Transaction, Even Without Internet
-          </p>
-          
-          {/* Trust Badge */}
-          <div className="flex items-center justify-center text-gray-500">
-            <Shield className="w-4 h-4 mr-2" />
-            <span className="text-sm">Trusted by millions across rural India</span>
-          </div>
-        </div>
-
-        {/* Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {/* Works Offline Card */}
-          <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Wifi className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Works Offline</h3>
-            <p className="text-gray-600 text-sm">
-              No internet connection required for transactions
+          {/* Hero Section */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              {t("Easy Offline Payment")}
+            </h1>
+            <p className="text-xl text-gray-600 mb-6">
+              {t("Empowering Every Transaction, Even Without Internet")}
+            </p>
+            <p className="text-lg text-gray-500">
+              {t("Trusted by millions across rural India")}
             </p>
           </div>
 
-          {/* Bank Grade Security Card */}
-          <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-8 h-8 text-blue-600" />
+          {/* Feature Cards */}
+          <div className="grid md:grid-cols-4 gap-6 mb-12">
+            {/* Works Offline Card */}
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Wifi className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                {t("Works Offline")}
+              </h3>
+              <p className="text-gray-600 text-sm">
+                {t("No internet connection required for transactions")}
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Bank Grade Security</h3>
-            <p className="text-gray-600 text-sm">
-              Advanced encryption and security protocols
-            </p>
+
+            {/* Bank Grade Security Card */}
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                {t("Bank Grade Security")}
+              </h3>
+              <p className="text-gray-600 text-sm">
+                {t("Advanced_Security")}
+              </p>
+            </div>
+
+            {/* Simple Interface Card */}
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Smartphone className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                {t("Simple Interface")}
+              </h3>
+              <p className="text-gray-600 text-sm">
+                {t("Easy_Interface")}
+              </p>
+            </div>
+
+            {/* Multilingual Support Card */}
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Globe className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                {t("Multilingual_Support")}
+              </h3>
+              <p className="text-gray-600 text-sm">
+                {t("Language_Support_Description")}
+              </p>
+            </div>
           </div>
 
-          {/* Simple Interface Card */}
-          <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Smartphone className="w-8 h-8 text-purple-600" />
+          {/* Auth Buttons */}
+          <div className="flex justify-center px-6 mb-8">
+            <div className="w-full max-w-md">
+              <div className="space-y-4">
+                <Button 
+                  className="w-full h-12" 
+                  variant="default"
+                  onClick={handleLogin}
+                >
+                  {t("Login to Account")}
+                </Button>
+                <Button 
+                  className="w-full h-12" 
+                  variant="outline"
+                  onClick={handleSignUp}
+                >
+                  {t("Create Account")}
+                </Button>
+              </div>
+              
+              {/* Trust message */}
+              <div className="text-center mt-4 text-sm text-gray-500">
+                <p>{t("Join millions of users across India")}</p>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Simple Interface</h3>
-            <p className="text-gray-600 text-sm">
-              Easy to use interface for everyone
-            </p>
           </div>
-        </div>
-
-        {/* Auth Buttons with container styling */}
-        <div className="flex justify-center px-6 mb-8">
-          <div className="w-full max-w-md">
-            <AuthButtons onLogin={handleLogin} onSignUp={handleSignUp} />
-            
-            {/* Optional: Add a trust message below buttons */}
-            <div className="text-center mt-4 text-sm text-gray-500">
-              <p>100% secure login • Government verified</p>
-            </div>
-          </div>
-        </div>
         </div>
       </div>
     </div>

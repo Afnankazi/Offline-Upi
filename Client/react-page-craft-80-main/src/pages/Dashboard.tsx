@@ -260,9 +260,10 @@ const [language, setLanguage] = useState(localStorage.getItem('language') || 'en
     }
   };
 
- 
-
- 
+  // Add this with other handler functions
+  const handleBlogsClick = () => {
+    navigate('/blogs');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -363,37 +364,57 @@ const [language, setLanguage] = useState(localStorage.getItem('language') || 'en
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-8">
           {[
             {
               icon: <SendIcon />,
               label: t("Transfer_Card_Title"),
               onClick: handleTransferClick,
-              gradient: 'from-blue-500 to-blue-400'
+              color: 'blue'
             },
             {
               icon: <CreditCard />,
               label: t("Top_Up_Card_Title"),
-              gradient: 'from-purple-500 to-purple-400'
+              color: 'purple'
             },
             {
               icon: <History />,
               label: t("History_Card_Title"),
               onClick: handleHistoryClick,
-              gradient: 'from-green-500 to-green-400'
+              color: 'green'
             }
           ].map((action, index) => (
             <Button 
               key={index}
-              variant="ghost" 
-              className="relative group bg-white hover:bg-gray-50 shadow-sm rounded-2xl h-28 flex flex-col items-center justify-center space-y-2 border border-gray-100 overflow-hidden transition-all duration-300 hover:scale-105"
+              variant="ghost"
               onClick={action.onClick}
+              className={`
+                group flex flex-col items-center justify-center
+                h-32 p-4 space-y-3
+                bg-white hover:bg-${action.color}-50
+                rounded-2xl border border-gray-100
+                transition-all duration-200 ease-in-out
+                hover:border-${action.color}-200 hover:shadow-lg
+                hover:-translate-y-0.5
+              `}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity`}></div>
-              <div className={`p-3 rounded-xl bg-gradient-to-br ${action.gradient} bg-opacity-10 group-hover:bg-opacity-20 transition-all duration-300`}>
-                <div className="text-blue-600">{action.icon}</div>
+              <div className={`
+                p-3 rounded-full
+                bg-${action.color}-100/50 
+                group-hover:bg-${action.color}-100
+                transition-colors duration-200
+              `}>
+                <div className={`text-${action.color}-600`}>
+                  {action.icon}
+                </div>
               </div>
-              <span className="text-sm font-medium text-gray-700">{action.label}</span>
+              <span className={`
+                text-sm font-medium text-gray-600
+                group-hover:text-${action.color}-700
+                transition-colors duration-200
+              `}>
+                {action.label}
+              </span>
             </Button>
           ))}
         </div>
@@ -454,17 +475,7 @@ const [language, setLanguage] = useState(localStorage.getItem('language') || 'en
           )}
         </div>
 
-        {/* Finance Blogs */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-20">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t("financeBlogs")}</h2>
-          <div className="divide-y divide-gray-100">
-            {news.map((item, index) => (
-              <div key={index} className="py-4 first:pt-0 last:pb-0">
-                <BLog Title={item.title} Description={item.description} Url={item.url} />
-              </div>
-            ))}
-          </div>
-        </div>
+        
       </main>
 
       {/* Bottom Navigation */}
@@ -490,7 +501,8 @@ const [language, setLanguage] = useState(localStorage.getItem('language') || 'en
             },
             {
               icon: <Bell className="h-5 w-5" />,
-              label: t("notify")
+              label: t("blogs"),
+              onClick: handleBlogsClick
             },
             {
               icon: <UserRound className="h-5 w-5" />,

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,7 @@ import UpiTransfer from "./pages/UpiTransfer";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import MyQRCode from "./pages/MyQRCode";
+import Blog from "./pages/BLog"; // Import the Blogs component
 
 const queryClient = new QueryClient();
 
@@ -32,6 +32,7 @@ const App = () => (
         <Route path="/upi-transfer" element={<UpiTransfer />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/my-qr-code" element={<MyQRCode />} />
+        <Route path="/blogs" element={<Blog Title={""} Description={""} Url={""} />} /> {/* Add the new route here */}
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
