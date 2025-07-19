@@ -124,25 +124,22 @@ const Login = () => {
     } catch (error) {
       console.error("Login error:", error);
       
-      // Extract error message if available
-      let errorMessage = "Invalid UPI ID or PIN";
+      let errorMessage = "An unexpected error occurred";
+      
       if (error instanceof AxiosError) {
-        if (error.response?.data?.error) {
-          errorMessage = error.response.data.error;
-        } else if (error.response?.status === 404) {
-          errorMessage = "User not found";
-        } else if (error.response?.status === 401) {
-          errorMessage = "Invalid credentials";
-        } else if (!error.response) {
-          errorMessage = "Network error. Please check your connection.";
-        }
+        // Safely extract error message from Axios error
+        errorMessage = error.response?.data?.message || 
+                      error.response?.data?.error ||
+                      error.message ||
+                      "Server error occurred";
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
       
+      // Ensure we're passing a string to the toast
       toast({
         title: "Login Failed",
-        description: errorMessage,
+        description: String(errorMessage),
         variant: "destructive"
       });
     } finally {
