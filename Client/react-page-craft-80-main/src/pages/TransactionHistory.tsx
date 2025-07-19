@@ -7,6 +7,7 @@ import axiosInstance from '@/utils/axios';
 import { SHA256 } from 'crypto-js';
 import { AxiosError } from 'axios';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 // Define the Transaction interface based on the backend model
 interface Transaction {
@@ -46,6 +47,7 @@ const TransactionHistory = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [totalCredit, setTotalCredit] = useState<number>(0);
+  const { t, i18n } = useTranslation();
 
   // Function to fetch transaction history
   const fetchTransactionHistory = async () => {
@@ -244,8 +246,8 @@ const TransactionHistory = () => {
             <ChevronLeft className="h-6 w-6" />
           </Button>
           <div>
-            <h1 className="text-xl font-semibold">Transaction History</h1>
-            <p className="text-sm text-blue-100">View all your transactions</p>
+            <h1 className="text-xl font-semibold">{t("Transaction_History")}</h1>
+            <p className="text-sm text-blue-100">{t("all_transactions")}</p>
           </div>
         </div>
         <Button 
@@ -265,14 +267,14 @@ const TransactionHistory = () => {
           {/* Summary Statistics */}
           {!isLoading && transactions.length > 0 && (
             <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl mb-6 text-white">
-              <h2 className="text-lg font-semibold mb-4">Summary</h2>
+              <h2 className="text-lg font-semibold mb-4">{t("Summary")}</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/5 p-4 rounded-xl">
-                  <p className="text-blue-100 text-sm mb-1">Total Sent</p>
+                  <p className="text-blue-100 text-sm mb-1">{t("Total_Sent")}</p>
                   <p className="text-2xl font-bold">₹{totalDebit.toFixed(2)}</p>
                 </div>
                 <div className="bg-white/5 p-4 rounded-xl">
-                  <p className="text-blue-100 text-sm mb-1">Total Received</p>
+                  <p className="text-blue-100 text-sm mb-1">{t("Total_Received")}</p>
                   <p className="text-2xl font-bold">₹{totalCredit.toFixed(2)}</p>
                 </div>
               </div>

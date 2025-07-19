@@ -29,6 +29,7 @@ import { API_BASE_URL } from '@/config';
 import axiosInstance from '@/utils/axios';
 import { AxiosError } from 'axios';
 import BLog from './BLog';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -37,12 +38,16 @@ const Dashboard = () => {
   const upiId = localStorage.getItem('upiId');
   const [balance, setBalance] = useState("");
   const [balanceLoaded, setBalanceLoaded] = useState(false);
-  const [language, setLanguage] = useState('en');
+
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [news, setNews] = useState([]);
   const [recentContacts, setRecentContacts] = useState([]);
+   const { t, i18n : trans } = useTranslation();
+
+   // Initialize language state with persisted value
+const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
   // Fetch balance on component mount
   useEffect(() => {
     const fetchNews = async () => {
@@ -165,8 +170,10 @@ const Dashboard = () => {
 
   // Handler for language change
   const handleLanguageChange = (value: string) => {
-    setLanguage(value);
-    // In a real app, you would update the app's language context/state here
+    console.log(value);
+    localStorage.setItem('language', value); // First store the value
+    setLanguage(value); // Update local state
+    trans.changeLanguage(value); // Update i18n language
   };
 
   // Handler for balance check
@@ -253,57 +260,9 @@ const Dashboard = () => {
     }
   };
 
-  // Text content based on selected language
-  const text = {
-    en: {
-      hello: "Hello",
-      availableBalance: "Your available balance",
-      transfer: "Transfer",
-      topUp: "Top Up",
-      history: "History",
-      recentPayments: "Recent Payments",
-      financeBlogs: "Finance Blogs",
-      ladkiBahinTitle: "Ladki bahin yojana",
-      ladkiBahinDesc: "Get 2700 for Ladki bahin transfer by Government",
-      specialGuide: "Special Guide",
-      savingTips: "10 tips to save more from your monthly income",
-      home: "Home",
-      report: "Report",
-      notify: "Notify",
-      profile: "Profile",
-      pickOption: "Pick an option",
-      checkBalance: "Check Balance",
-      enterPin: "Enter your PIN",
-      pinDescription: "Please enter your 6-digit PIN to check your balance",
-      submit: "Submit",
-      cancel: "Cancel",
-    },
-    hi: {
-      hello: "नमस्ते",
-      availableBalance: "आपका उपलब्ध शेष",
-      transfer: "स्थानांतरण",
-      topUp: "टॉप अप",
-      history: "इतिहास",
-      recentPayments: "हाल के भुगतान",
-      financeBlogs: "वित्त ब्लॉग",
-      ladkiBahinTitle: "लड़की बहिन योजना",
-      ladkiBahinDesc: "सरकार द्वारा लड़की बहिन हस्तांतरण के लिए 2700 प्राप्त करें",
-      specialGuide: "विशेष गाइड",
-      savingTips: "अपनी मासिक आय से अधिक बचाने के लिए 10 टिप्स",
-      home: "होम",
-      report: "रिपोर्ट",
-      notify: "सूचना",
-      profile: "प्रोफाइल",
-      pickOption: "विकल्प चुनें",
-      checkBalance: "शेष जांचें",
-      enterPin: "अपना पिन दर्ज करें",
-      pinDescription: "अपना शेष जांचने के लिए कृपया अपना 6-अंक का पिन दर्ज करें",
-      submit: "जमा करें",
-      cancel: "रद्द करें",
-    }
-  };
+ 
 
-  const t = language === 'en' ? text.en : text.hi;
+ 
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -324,22 +283,33 @@ const Dashboard = () => {
               <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
                 Digital Bharat Pay
               </h1>
-              <p className="text-xs text-gray-500 font-medium">Welcome back, {userName}</p>
+              <p className="text-xs text-gray-500 font-medium">{t("Welcome_Message")}, {userName}</p>
             </div>
           </div>
           
-          <Select value={language} onValueChange={handleLanguageChange}>
-            <SelectTrigger className="border-gray-200 bg-white hover:bg-gray-50 w-[120px]">
-              <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-blue-600" />
-                <SelectValue>{language === 'en' ? 'English' : 'हिंदी'}</SelectValue>
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="hi">हिंदी</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2">
+  <Select value={language} onValueChange={handleLanguageChange}>
+    <SelectTrigger className="w-[120px] h-8 text-xs">
+      <div className="flex items-center gap-1">
+        <Globe className="h-3 w-3" />
+        {/* The SelectValue component automatically displays the content of the selected item.
+          You can provide a placeholder for when no value is selected.
+        */}
+        <SelectValue placeholder="Language" />
+      </div>
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="en">English</SelectItem>
+      <SelectItem value="hi">हिंदी</SelectItem>
+      <SelectItem value="ml">മലയാളം</SelectItem>
+      <SelectItem value="te">తెలుగు</SelectItem>
+      <SelectItem value="ta">தமிழ்</SelectItem>
+      <SelectItem value="gu">ગુજરાતી</SelectItem>
+      <SelectItem value="pa">ਪੰਜਾਬੀ</SelectItem>
+      <SelectItem value="mr">मराठी</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
         </div>
       </header>
 
@@ -352,7 +322,7 @@ const Dashboard = () => {
           
           <div className="relative">
             <div className="mb-6">
-              <h2 className="text-lg text-white/90 font-medium">{t.availableBalance}</h2>
+              <h2 className="text-lg text-white/90 font-medium">{t("Balance_Label")}</h2>
               <div className="flex items-center gap-3 mt-2">
                 {balanceLoaded ? (
                   <p className="text-5xl font-bold text-white tracking-tight">₹{balance}</p>
@@ -378,7 +348,7 @@ const Dashboard = () => {
                 className="flex-1 mr-4 text-white hover:bg-white/10 backdrop-blur-sm rounded-xl h-12"
               >
                 <SendIcon className="h-5 w-5 mr-2" />
-                Send Money
+                {t("Send_Money_Button")}
               </Button>
               <Button
                 variant="outline"
@@ -386,7 +356,7 @@ const Dashboard = () => {
                 className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm rounded-xl h-12"
               >
                 <QrCodeScannerIcon className="h-5 w-5 mr-2" />
-                My QR Code
+                {t("My_QR_Code_Button")}
               </Button>
             </div>
           </div>
@@ -397,18 +367,18 @@ const Dashboard = () => {
           {[
             {
               icon: <SendIcon />,
-              label: t.transfer,
+              label: t("Transfer_Card_Title"),
               onClick: handleTransferClick,
               gradient: 'from-blue-500 to-blue-400'
             },
             {
               icon: <CreditCard />,
-              label: t.topUp,
+              label: t("Top_Up_Card_Title"),
               gradient: 'from-purple-500 to-purple-400'
             },
             {
               icon: <History />,
-              label: t.history,
+              label: t("History_Card_Title"),
               onClick: handleHistoryClick,
               gradient: 'from-green-500 to-green-400'
             }
@@ -431,7 +401,7 @@ const Dashboard = () => {
         {/* Recent Payments */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-8 hover:border-blue-100 transition-colors">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-800">{t.recentPayments}</h2>
+            <h2 className="text-lg font-semibold text-gray-800">{t("recentPayments")}</h2>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -486,7 +456,7 @@ const Dashboard = () => {
 
         {/* Finance Blogs */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-20">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t.financeBlogs}</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t("financeBlogs")}</h2>
           <div className="divide-y divide-gray-100">
             {news.map((item, index) => (
               <div key={index} className="py-4 first:pt-0 last:pb-0">
@@ -504,12 +474,12 @@ const Dashboard = () => {
           {[
             {
               icon: <Home className="h-5 w-5" />,
-              label: t.home,
+              label: t("home"),
               active: true
             },
             {
               icon: <BarChart2 className="h-5 w-5" />,
-              label: t.report,
+              label: t("report"),
               onClick: handleHistoryClick
             },
             {
@@ -520,11 +490,11 @@ const Dashboard = () => {
             },
             {
               icon: <Bell className="h-5 w-5" />,
-              label: t.notify
+              label: t("notify")
             },
             {
               icon: <UserRound className="h-5 w-5" />,
-              label: t.profile,
+              label: t("profile"),
               onClick: handleProfileClick
             }
           ].map((item, index) => (
@@ -558,9 +528,9 @@ const Dashboard = () => {
       <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t.enterPin}</DialogTitle>
+            <DialogTitle>{t("enterPin")}</DialogTitle>
             <DialogDescription>
-              {t.pinDescription}
+              {t("pinDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -583,10 +553,10 @@ const Dashboard = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPinDialogOpen(false)}>
-              {t.cancel}
+                  {t("cancel")}
             </Button>
             <Button onClick={handlePinSubmit} disabled={isLoading}>
-              {isLoading ? "Checking..." : t.submit}
+              {isLoading ? "Checking..." : t("submit")}
             </Button>
           </DialogFooter>
         </DialogContent>

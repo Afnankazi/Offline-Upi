@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { UserRound, ArrowLeft, Lock, User, Save, LogOut, AtSign } from 'lucide-react';
 import axiosInstance from '@/utils/axios';
 import { SHA256 } from 'crypto-js';
-
+import { useTranslation } from 'react-i18next';
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -18,6 +18,7 @@ const Profile = () => {
   const [confirmPin, setConfirmPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     const storedName = localStorage.getItem('name');
@@ -178,8 +179,8 @@ const Profile = () => {
       <div className="px-4 pb-8">
         {/* Welcome Section */}
         <div className="text-center text-white mb-8">
-          <h1 className="text-2xl font-bold mb-2">Profile Settings</h1>
-          <p className="text-blue-100">Manage your account information</p>
+          <h1 className="text-2xl font-bold mb-2">{t("Profile_Settings")}</h1>
+          <p className="text-blue-100">{t("account_information")}</p>
         </div>
 
         <div className="max-w-md mx-auto">
@@ -204,7 +205,7 @@ const Profile = () => {
                 <div>
                   <Label htmlFor="name" className="flex items-center text-gray-700 mb-2">
                     <User className="h-4 w-4 mr-2 text-blue-600" />
-                    Update Name
+                    {t("Update_Name")}
                   </Label>
                   <Input
                     id="name"
@@ -218,7 +219,7 @@ const Profile = () => {
                 <div>
                   <Label htmlFor="upiId" className="flex items-center text-gray-700 mb-2">
                     <AtSign className="h-4 w-4 mr-2 text-blue-600" />
-                    Update UPI ID
+                    {t("Update_UPI")}
                   </Label>
                   <Input
                     id="upiId"
@@ -242,7 +243,7 @@ const Profile = () => {
                   ) : (
                     <div className="flex items-center justify-center">
                       <Save className="w-4 h-4 mr-2" />
-                      Update Profile
+                      {t("Update_Profile")}
                     </div>
                   )}
                 </Button>
@@ -252,14 +253,14 @@ const Profile = () => {
               <div className="space-y-4 pt-4 border-t">
                 <Label className="flex items-center text-gray-700 mb-2">
                   <Lock className="h-4 w-4 mr-2 text-blue-600" />
-                  Update PIN
+                  {t("Update_PIN")}
                 </Label>
                 <div className="space-y-3">
                   <Input
                     type="password"
                     value={currentPin}
                     onChange={(e) => setCurrentPin(e.target.value)}
-                    placeholder="Current PIN"
+                    placeholder={t("Current_pin")}
                     maxLength={6}
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -269,7 +270,7 @@ const Profile = () => {
                     type="password"
                     value={newPin}
                     onChange={(e) => setNewPin(e.target.value)}
-                    placeholder="New PIN (6 digits)"
+                    placeholder={t("New_pin")}
                     maxLength={6}
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -279,7 +280,7 @@ const Profile = () => {
                     type="password"
                     value={confirmPin}
                     onChange={(e) => setConfirmPin(e.target.value)}
-                    placeholder="Confirm New PIN"
+                    placeholder={t("Conf_pin")}
                     maxLength={6}
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -298,7 +299,7 @@ const Profile = () => {
                     ) : (
                       <div className="flex items-center justify-center">
                         <Save className="w-4 h-4 mr-2" />
-                        Update PIN
+                        {t("Update_PIN")}
                       </div>
                     )}
                   </Button>
