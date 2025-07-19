@@ -123,25 +123,22 @@ const Login = () => {
     } catch (error) {
       console.error("Login error:", error);
       
-      // Extract error message if available
-      let errorMessage = "Invalid UPI ID or PIN";
+      let errorMessage = "An unexpected error occurred";
+      
       if (error instanceof AxiosError) {
-        if (error.response?.data?.error) {
-          errorMessage = error.response.data.error;
-        } else if (error.response?.status === 404) {
-          errorMessage = "User not found";
-        } else if (error.response?.status === 401) {
-          errorMessage = "Invalid credentials";
-        } else if (!error.response) {
-          errorMessage = "Network error. Please check your connection.";
-        }
+        // Safely extract error message from Axios error
+        errorMessage = error.response?.data?.message || 
+                      error.response?.data?.error ||
+                      error.message ||
+                      "Server error occurred";
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
       
+      // Ensure we're passing a string to the toast
       toast({
         title: "Login Failed",
-        description: errorMessage,
+        description: String(errorMessage),
         variant: "destructive"
       });
     } finally {
@@ -160,21 +157,40 @@ const Login = () => {
   const handleBiometricLogin = async () => {
     try {
       setIsLoading(true);
+      
+      if (!upiId) {
+        toast({
+          title: "UPI ID Required",
+          description: "Please enter your UPI ID first",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const isAuthenticated = await authenticateWithBiometric(upiId);
       
       if (isAuthenticated) {
-        // Get stored credentials
         const storedPin = localStorage.getItem('userPin');
         if (storedPin) {
-          // Use the stored PIN to login
           setPin(storedPin);
           handleLogin(new Event('submit') as any);
         }
       }
     } catch (error) {
+      console.error('Biometric login error:', error);
+      let errorMessage = "Please use your PIN instead";
+      
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage = "Biometric authentication was denied";
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = "Your device doesn't support biometric authentication";
+        }
+      }
+      
       toast({
         title: "Biometric Authentication Failed",
-        description: "Please use your PIN instead",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -182,6 +198,57 @@ const Login = () => {
     }
   };
 
+  /**
+   * Attempts to create a passkey (biometric credential) for the given UPI ID.
+   * Returns true if successful, false otherwise.
+   */
+  async function createPasskey(upiId: string): Promise<boolean> {
+    // Check if WebAuthn is supported
+    if (!window.PublicKeyCredential) {
+      return false;
+    }
+
+    try {
+      // Create a random challenge (in real apps, get from server)
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+
+      // Use UPI ID as user ID (should be unique per user)
+      const userId = new TextEncoder().encode(upiId);
+
+      const publicKey: PublicKeyCredentialCreationOptions = {
+        challenge,
+        rp: {
+          name: "Offline UPI",
+        },
+        user: {
+          id: userId,
+          name: upiId,
+          displayName: upiId,
+        },
+        pubKeyCredParams: [
+          { type: "public-key", alg: -7 }, // ES256
+          { type: "public-key", alg: -257 }, // RS256
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: "platform",
+          userVerification: "required",
+        },
+        timeout: 60000,
+        attestation: "none",
+      };
+
+      // Prompt user to register a credential
+      const credential = await navigator.credentials.create({ publicKey });
+
+      // In a real app, send credential to server for verification and storage
+      // Here, we just check if credential was created
+      return !!credential;
+    } catch (error) {
+      console.error("createPasskey error:", error);
+      return false;
+    }
+  }
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -257,6 +324,7 @@ const Login = () => {
                 </div>
               </div>
 
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -275,6 +343,7 @@ const Login = () => {
                 <button 
                   type="button"
                   className="text-sm text-blue-600 hover:text-blue-700"
+
                 >
                   Forgot PIN?
                 </button>
