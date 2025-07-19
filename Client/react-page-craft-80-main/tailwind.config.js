@@ -40,8 +40,26 @@ module.exports = {
       },
       transitionDuration: {
         '200': '200ms'
-      }
+      },
+      animation: {
+        'in': 'in 1s ease-out',
+        'bounce': 'bounce 2s infinite',
+      },
+      keyframes: {
+        'in': {
+          '0%': { 
+            opacity: '0',
+            transform: 'translateY(-10px) scale(0.95)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0) scale(1)',
+          },
+        },
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+  ],
 }

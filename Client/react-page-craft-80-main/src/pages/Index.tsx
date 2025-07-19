@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import Logo from "@/components/Logo";
-import AuthButtons from "@/components/AuthButtons";
+import  Logo  from "../components/Logo";
 import { useToast } from "@/components/ui/use-toast";
 import { Wifi, Shield, Smartphone, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+
 const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -36,53 +36,56 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-blue-100">
       {/* Header */}
-      <div className="bg-blue-600 text-white px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-              <div className="text-xs text-white">₹</div>
+      <header className="bg-blue-600 text-white px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                <div className="text-xs text-white">₹</div>
+              </div>
+            </div>
+            <div>
+              <div className="font-semibold text-lg">Digital Bharat Pay</div>
+              <div className="text-xs text-blue-200 flex items-center">
+                <Shield className="w-3 h-3 mr-1" />
+                {t("Verified_by_Govt")}
+              </div>
             </div>
           </div>
-          <div>
-            <div className="font-semibold text-lg">Digital Bharat Pay</div>
-            <div className="text-xs text-blue-200 flex items-center">
-              <Shield className="w-3 h-3 mr-1" />
-              Verified by Govt. of India
-            </div>
+
+          {/* Language Selector */}
+          <div className="flex items-center">
+            <Select value={language} onValueChange={handleLanguageChange}>
+              <SelectTrigger className="w-[120px] h-8 text-xs bg-white/10 border-white/20">
+                <div className="flex items-center gap-1 text-white">
+                  <Globe className="h-3 w-3" />
+                  <SelectValue placeholder="Language" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="hi">हिंदी</SelectItem>
+                <SelectItem value="ml">മലയാളം</SelectItem>
+                <SelectItem value="te">తెలుగు</SelectItem>
+                <SelectItem value="ta">தமிழ்</SelectItem>
+                <SelectItem value="gu">ગુજરાતી</SelectItem>
+                <SelectItem value="pa">ਪੰਜਾਬੀ</SelectItem>
+                <SelectItem value="mr">मराठी</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-           <div className="flex items-center gap-2 text-black">
-  <Select value={language} onValueChange={handleLanguageChange}>
-    <SelectTrigger className="w-[120px] h-8 text-xs">
-      <div className="flex items-center gap-1">
-        <Globe className="h-3 w-3" />
-        {/* The SelectValue component automatically displays the content of the selected item.
-          You can provide a placeholder for when no value is selected.
-        */}
-        <SelectValue placeholder="Language" />
-      </div>
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="en">English</SelectItem>
-      <SelectItem value="hi">हिंदी</SelectItem>
-      <SelectItem value="ml">മലയാളം</SelectItem>
-      <SelectItem value="te">తెలుగు</SelectItem>
-      <SelectItem value="ta">தமிழ்</SelectItem>
-      <SelectItem value="gu">ગુજરાતી</SelectItem>
-      <SelectItem value="pa">ਪੰਜਾਬੀ</SelectItem>
-      <SelectItem value="mr">मराठी</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-4xl mx-auto">
+          <Logo size="lg" animate={true} className="mx-auto mb-12" />
+
           {/* Hero Section */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               {t("Easy Offline Payment")}
             </h1>
@@ -150,33 +153,31 @@ const Index = () => {
           </div>
 
           {/* Auth Buttons */}
-          <div className="flex justify-center px-6 mb-8">
-            <div className="w-full max-w-md">
-              <div className="space-y-4">
-                <Button 
-                  className="w-full h-12" 
-                  variant="default"
-                  onClick={handleLogin}
-                >
-                  {t("Login to Account")}
-                </Button>
-                <Button 
-                  className="w-full h-12" 
-                  variant="outline"
-                  onClick={handleSignUp}
-                >
-                  {t("Create Account")}
-                </Button>
-              </div>
+          <div className="flex justify-center px-6">
+            <div className="w-full max-w-md space-y-4">
+              <Button 
+                className="w-full h-12 text-base font-medium" 
+                variant="default"
+                onClick={handleLogin}
+              >
+                {t("Login to Account")}
+              </Button>
+              <Button 
+                className="w-full h-12 text-base font-medium" 
+                variant="outline"
+                onClick={handleSignUp}
+              >
+                {t("Create Account")}
+              </Button>
               
               {/* Trust message */}
-              <div className="text-center mt-4 text-sm text-gray-500">
+              <div className="text-center mt-6 text-sm text-gray-500">
                 <p>{t("Join millions of users across India")}</p>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

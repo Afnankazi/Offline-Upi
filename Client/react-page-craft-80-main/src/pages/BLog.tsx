@@ -1,25 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Newspaper, ExternalLink } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useToast } from "@/components/ui/use-toast";
-import BLog from './BLog';
 
+// Interface for a single news item
 interface NewsItem {
   title: string;
   description: string;
   url: string;
-  publishedAt: string; // Changed from published_at to match GNews API
+  publishedAt: string;
   source: {
     name: string;
   };
 }
 
-// Create a simple cache mechanism
+// --- Cache Configuration ---
 const CACHE_KEY = 'news_cache';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// --- Fallback Data ---
+const FALLBACK_NEWS: NewsItem[] = [
+    {
+      title: "UPI Transactions Hit Record High in 2024",
+      description: "Digital payments through UPI reached a new milestone with over 10 billion transactions in a single month, showcasing the rapid adoption of digital finance across India.",
+      url: "#", // Using placeholder URL for fallback
+      publishedAt: new Date().toISOString(),
+      source: { name: "Digital Bharat Pay" }
+    },
+    {
+      title: "New Security Measures for Digital Payments",
+      description: "The latest update introduces enhanced, multi-layered security protocols for all UPI transactions to better protect users from fraud and ensure safer digital payments.",
+      url: "#",
+      publishedAt: new Date().toISOString(),
+      source: { name: "FinTech Times" }
+    }
+];
+
 
 const Blogs = () => {
   const navigate = useNavigate();
@@ -27,8 +46,8 @@ const Blogs = () => {
   const { t } = useTranslation();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
 
+  // --- Caching Functions ---
   const getCachedNews = () => {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
@@ -47,47 +66,28 @@ const Blogs = () => {
     }));
   };
 
-  // Add static fallback news data
-  const FALLBACK_NEWS: NewsItem[] = [
-    {
-      title: "UPI Transactions Hit Record High in 2024",
-      description: "Digital payments through UPI reached a new milestone with over 10 billion transactions...",
-      url: "https://www.digitalbharatpay.com/news/upi-milestone",
-      publishedAt: new Date().toISOString(),
-      source: { name: "Digital Bharat Pay" }
-    },
-    {
-      title: "Digital Payment Security Updates",
-      description: "New security measures implemented for UPI transactions to enhance user protection...",
-      url: "https://www.digitalbharatpay.com/news/security-update",
-      publishedAt: new Date().toISOString(),
-      source: { name: "Digital Bharat Pay" }
-    }
-    // Add more fallback news items as needed
-  ];
-
+  // --- Data Fetching Logic ---
   const fetchNews = async (useCache = true) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
-      // Check cache first if useCache is true
+      // 1. Check cache first
       if (useCache) {
         const cachedData = getCachedNews();
         if (cachedData) {
-          setNews(cachedData.slice(0, 10)); // Limit to 10 items
+          setNews(cachedData.slice(0, 10));
           setIsLoading(false);
           return;
         }
       }
 
-      // First try the API
+      // 2. Attempt to fetch from API
       try {
         const response = await axios.get('https://gnews.io/api/v4/search', {
           params: {
             q: 'upi OR digital payment OR fintech india',
             lang: 'en',
             country: 'in',
-            max: 10, // Limit to 10 results
+            max: 10,
             apikey: '2833e6f0922bf31ce0ae232c6f862703'
           },
           timeout: 5000
@@ -103,33 +103,25 @@ const Blogs = () => {
           }));
           setNews(formattedNews);
           setCachedNews(formattedNews);
-          return;
+          return; // Success, exit function
         }
       } catch (apiError) {
-        console.error("API Error:", apiError);
-        // If API fails, continue to fallback
+        console.error("API Fetch Error:", apiError);
+        // If API fails, proceed to use fallback data
       }
 
-      // If API fails, use fallback data
+      // 3. Use fallback data if API fails
       setNews(FALLBACK_NEWS);
-      setCachedNews(FALLBACK_NEWS);
+      setCachedNews(FALLBACK_NEWS); // Cache fallback data as well
 
-    } catch (error: any) {
-      console.error("Error in fetchNews:", error);
-      
-      // Try to use cached data first
-      const cachedData = getCachedNews();
-      if (cachedData) {
-        setNews(cachedData.slice(0, 10));
-      } else {
-        // If no cached data, use fallback
-        setNews(FALLBACK_NEWS);
-      }
-
+    } catch (error) {
+      console.error("General Error in fetchNews:", error);
+      // Use fallback data on any other error
+      setNews(FALLBACK_NEWS);
       toast({
         title: t("News_Update_Error"),
         description: t("Using_Available_Data"),
-        variant: "warning"
+        variant: "destructive" // More prominent error
       });
     } finally {
       setIsLoading(false);
@@ -140,78 +132,86 @@ const Blogs = () => {
     fetchNews();
   }, []);
 
-  // Add refresh functionality
   const handleRefresh = () => {
     fetchNews(false); // Skip cache on manual refresh
   };
+  
+  // --- Skeleton Loader Component ---
+  const SkeletonCard = () => (
+    <div className="bg-white border border-gray-200 rounded-xl p-5 animate-pulse">
+        <div className="h-5 bg-gray-200 rounded-md w-3/4 mb-4"></div>
+        <div className="h-3 bg-gray-200 rounded-md w-full mb-2"></div>
+        <div className="h-3 bg-gray-200 rounded-md w-5/6 mb-4"></div>
+        <div className="flex justify-between items-center">
+            <div className="h-4 bg-gray-200 rounded-md w-1/4"></div>
+            <div className="h-4 bg-gray-200 rounded-md w-1/3"></div>
+        </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b px-6 py-4 sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-gray-100/50 font-sans">
+      {/* --- Header --- */}
+      <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200/80 px-4 py-3 sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
               size="icon"
               onClick={() => navigate('/dashboard')}
-              className="rounded-xl hover:bg-gray-100"
+              className="rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-900"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-xl font-semibold text-gray-900">{t("Financial_News")}</h1>
+            <h1 className="text-lg font-bold text-gray-800">{t("Financial_News")}</h1>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="rounded-xl hover:bg-gray-100"
+            className="rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-900 disabled:opacity-50"
           >
             <RefreshCw className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        {isLoading ? (
-          // Loading state
-          <div className="space-y-4">
-            {[...Array(5)].map((_, index) => (
-              <div 
-                key={index}
-                className="bg-white rounded-xl p-6 animate-pulse"
+      {/* --- Main Content --- */}
+      <main className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+        <div className="space-y-5">
+          {isLoading ? (
+            // --- Loading State ---
+            [...Array(5)].map((_, index) => <SkeletonCard key={index} />)
+          ) : news.length > 0 ? (
+            // --- News Content ---
+            news.map((item, index) => (
+              <a 
+                href={item.url} 
+                key={index} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block bg-white border border-gray-200 rounded-xl p-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          // News content
-          <div className="space-y-4">
-            {news.map((item, index) => (
-              <div key={index} className="transition-all duration-300 hover:transform hover:translate-y-[-2px]">
-                <BLog
-                  Title={item.title}
-                  Description={item.description}
-                  Url={item.url}
-                  Source={item.source.name} // Add source to BLog component
-                  PublishedAt={new Date(item.publishedAt).toLocaleDateString()} // Format date
-                />
-              </div>
-            ))}
-
-            {/* Empty state */}
-            {news.length === 0 && !isLoading && (
-              <div className="text-center py-12">
-                <h3 className="text-gray-500 text-lg">{t("No_News_Available")}</h3>
-                <p className="text-gray-400 mt-2">{t("Check_Back_Later")}</p>
-              </div>
-            )}
-          </div>
-        )}
+                <article className="flex flex-col h-full">
+                    <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-2 leading-tight">{item.title}</h2>
+                    <p className="text-sm text-gray-600 flex-grow mb-4">{item.description}</p>
+                    <footer className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-3 border-t border-gray-100">
+                        <span className="font-medium truncate pr-4">{item.source.name}</span>
+                        <time dateTime={item.publishedAt}>{new Date(item.publishedAt).toLocaleDateString()}</time>
+                    </footer>
+                </article>
+              </a>
+            ))
+          ) : (
+            // --- Empty State ---
+            <div className="text-center py-16 px-6 bg-white rounded-xl border border-dashed">
+                <Newspaper className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-4 text-lg font-semibold text-gray-800">{t("No_News_Available")}</h3>
+                <p className="mt-1 text-sm text-gray-500">{t("Check_Back_Later")}</p>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
