@@ -1,47 +1,34 @@
-
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Button } from './ui/button';
+import { ArrowRight } from 'lucide-react';
 
 interface AuthButtonsProps {
   onLogin: () => void;
   onSignUp: () => void;
 }
 
-const AuthButtons = ({ onLogin, onSignUp }: AuthButtonsProps) => {
-  const navigate = useNavigate();
-
-  const handleLogin = () => {
-    // Call the original onLogin prop function
-    onLogin();
-    
-    // Navigate to the login page
-    navigate('/login');
-  };
-
-  const handleSignUp = () => {
-    // Call the original onSignUp prop function
-    onSignUp();
-    
-    // Navigate to the register page
-    navigate('/register');
-  };
-
+const AuthButtons: React.FC<AuthButtonsProps> = ({ onLogin, onSignUp }) => {
   return (
-    <div className="w-full max-w-xs space-y-3">
-      <Button 
-        className="w-full bg-seva-green hover:bg-seva-green/90 text-white font-medium"
-        onClick={handleLogin}
+    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+      <Button
+        onClick={onLogin}
+        className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl 
+          transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg
+          flex items-center justify-center gap-2"
       >
-        Login
+        Login to Account
+        <ArrowRight className="w-4 h-4" />
       </Button>
       
-      <Button 
-        variant="outline" 
-        className="w-full border-gray-300 hover:bg-gray-50 text-gray-800 font-medium"
-        onClick={handleSignUp}
+      <Button
+        onClick={onSignUp}
+        variant="outline"
+        className="flex-1 h-12 border-2 border-blue-600 text-blue-600 font-medium rounded-xl
+          hover:bg-blue-50 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg
+          flex items-center justify-center gap-2"
       >
-        Sign Up
+        Create Account
+        <ArrowRight className="w-4 h-4" />
       </Button>
     </div>
   );

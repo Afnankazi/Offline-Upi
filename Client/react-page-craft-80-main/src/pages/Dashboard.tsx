@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { Bell, Home, Wallet, BarChart2, UserRound, ChevronDown, SendIcon, CreditCard, Clock, History, Globe, RefreshCw } from 'lucide-react';
+import { Bell, Home, Wallet, BarChart2, UserRound, ChevronDown, SendIcon, CreditCard, Clock, History, Globe, RefreshCw, ArrowRight } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -306,22 +306,32 @@ const Dashboard = () => {
   const t = language === 'en' ? text.en : text.hi;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Top Nav */}
-      <header className="px-4 py-3 flex justify-between items-center bg-white border-b">
-        <div className="flex items-center">
-          <div 
-            className="w-10 h-10 bg-seva-green rounded-full flex items-center justify-center cursor-pointer"
-            onClick={handleMyQRCodeClick}
-          >
-            <QrCodeScannerIcon  className="w-5 h-5 text-white" />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b px-6 py-4 sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <div className="relative w-12 h-12 transform hover:scale-105 transition-transform">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 rounded-xl rotate-6 opacity-75 blur-sm"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 rounded-xl"></div>
+              <div className="absolute inset-0 bg-white rounded-xl flex items-center justify-center transform -rotate-6">
+                <div className="w-7 h-7 bg-gradient-to-br from-blue-600 to-blue-400 rounded-lg flex items-center justify-center">
+                  <Wallet className="w-4 h-4 text-white" />
+                </div>
+              </div>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                Digital Bharat Pay
+              </h1>
+              <p className="text-xs text-gray-500 font-medium">Welcome back, {userName}</p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
+          
           <Select value={language} onValueChange={handleLanguageChange}>
-            <SelectTrigger className="w-[100px] h-8 text-xs">
-              <div className="flex items-center gap-1">
-                <Globe className="h-3 w-3" />
+            <SelectTrigger className="border-gray-200 bg-white hover:bg-gray-50 w-[120px]">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-blue-600" />
                 <SelectValue>{language === 'en' ? 'English' : 'हिंदी'}</SelectValue>
               </div>
             </SelectTrigger>
@@ -334,123 +344,213 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-4">
-        {/* Balance Section */}
-        <section className="mb-6">
-          <h2 className="text-lg font-medium">{t.hello} {userName},</h2>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">{t.availableBalance}</p>
-            <div className="flex items-center gap-2">
-              {balanceLoaded ? (
-                <p className="text-2xl font-bold">₹{balance}</p>
-              ) : (
-                <p className="text-2xl font-bold">•••••</p>
-              )}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8" 
-                onClick={handleBalanceCheck}
-                disabled={isLoading}
+      <main className="max-w-5xl mx-auto px-6 py-6">
+        {/* Balance Card */}
+        <div className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 rounded-2xl shadow-lg p-8 mb-8 overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-700/20 rounded-full translate-y-32 -translate-x-32 blur-3xl"></div>
+          
+          <div className="relative">
+            <div className="mb-6">
+              <h2 className="text-lg text-white/90 font-medium">{t.availableBalance}</h2>
+              <div className="flex items-center gap-3 mt-2">
+                {balanceLoaded ? (
+                  <p className="text-5xl font-bold text-white tracking-tight">₹{balance}</p>
+                ) : (
+                  <p className="text-5xl font-bold text-white tracking-tight">•••••</p>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-10 w-10 rounded-xl text-white/90 hover:text-white hover:bg-white/10 backdrop-blur-sm" 
+                  onClick={handleBalanceCheck}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex justify-between items-center mt-8 pt-6 border-t border-white/20">
+              <Button
+                variant="ghost"
+                onClick={handleTransferClick}
+                className="flex-1 mr-4 text-white hover:bg-white/10 backdrop-blur-sm rounded-xl h-12"
               >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <SendIcon className="h-5 w-5 mr-2" />
+                Send Money
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleMyQRCodeClick}
+                className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm rounded-xl h-12"
+              >
+                <QrCodeScannerIcon className="h-5 w-5 mr-2" />
+                My QR Code
               </Button>
             </div>
           </div>
-        </section>
+        </div>
 
         {/* Quick Actions */}
-        <section className="mb-8">
-          <div className="bg-white rounded-lg h-20 mt-7 shadow-sm grid grid-cols-3 divide-x">
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          {[
+            {
+              icon: <SendIcon />,
+              label: t.transfer,
+              onClick: handleTransferClick,
+              gradient: 'from-blue-500 to-blue-400'
+            },
+            {
+              icon: <CreditCard />,
+              label: t.topUp,
+              gradient: 'from-purple-500 to-purple-400'
+            },
+            {
+              icon: <History />,
+              label: t.history,
+              onClick: handleHistoryClick,
+              gradient: 'from-green-500 to-green-400'
+            }
+          ].map((action, index) => (
             <Button 
+              key={index}
               variant="ghost" 
-              className="flex flex-col items-center py-4 rounded-l-lg"
-              onClick={handleTransferClick}
+              className="relative group bg-white hover:bg-gray-50 shadow-sm rounded-2xl h-28 flex flex-col items-center justify-center space-y-2 border border-gray-100 overflow-hidden transition-all duration-300 hover:scale-105"
+              onClick={action.onClick}
             >
-              <SendIcon className="h-5 w-5 mt-8 text-seva-green mb-1" />
-              <span className="text-xs">{t.transfer}</span>
+              <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity`}></div>
+              <div className={`p-3 rounded-xl bg-gradient-to-br ${action.gradient} bg-opacity-10 group-hover:bg-opacity-20 transition-all duration-300`}>
+                <div className="text-blue-600">{action.icon}</div>
+              </div>
+              <span className="text-sm font-medium text-gray-700">{action.label}</span>
             </Button>
-            <Button variant="ghost" className="flex flex-col items-center py-4">
-              <CreditCard className="h-5 w-5 mt-8 text-seva-green mb-1" />
-              <span className="text-xs">{t.topUp}</span>
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="flex flex-col items-center py-4 rounded-r-lg"
-              onClick={handleHistoryClick}
-            >
-              <History className="h-5 w-5 mt-8 text-seva-green mb-1" />
-              <span className="text-xs">{t.history}</span>
-            </Button>
-          </div>
-        </section>
+          ))}
+        </div>
 
         {/* Recent Payments */}
-        <section className="mb-6">
-          <h2 className="text-base font-medium mb-3">{t.recentPayments}</h2>
-          <div className="flex space-x-4 overflow-x-auto pb-2">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-8 hover:border-blue-100 transition-colors">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold text-gray-800">{t.recentPayments}</h2>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleHistoryClick} 
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl"
+            >
+              <span className="hidden sm:inline">View All</span> 
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+          
+          {/* Grid container with responsive columns */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
             {recentContacts.map((transaction) => (
-              <div key={transaction.transactionId} className="flex flex-col items-center">
-                <Avatar className="h-12 w-12 mb-1">
-                  <AvatarFallback>{transaction.transactionType === 'DEBIT' ? transaction.receiverUpi.charAt(0) : transaction.sender?.name?.charAt(0) || 'U'}</AvatarFallback>
+              <div 
+                key={transaction.transactionId} 
+                className="flex flex-col items-center p-2 sm:p-4 rounded-xl hover:bg-blue-50/50 transition-all duration-300 group cursor-pointer"
+              >
+                {/* Avatar with responsive sizing */}
+                <Avatar className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 mb-2 sm:mb-3 ring-2 ring-blue-50 transform group-hover:scale-105 transition-transform">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 font-semibold text-xs sm:text-sm">
+                    {transaction.transactionType === 'DEBIT' 
+                      ? transaction.receiverUpi.charAt(0).toUpperCase()
+                      : transaction.sender?.name?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
                 </Avatar>
-                <p className="text-xs">{transaction.transactionType === 'DEBIT' ? transaction.receiverUpi : transaction.sender?.name || 'Unknown'}</p>
+                
+                {/* Transaction details with responsive text */}
+                <p className="text-xs sm:text-sm text-gray-900 text-center truncate w-full font-medium group-hover:text-blue-600 transition-colors">
+                  {transaction.transactionType === 'DEBIT' 
+                    ? transaction.receiverUpi.split('@')[0]
+                    : transaction.sender?.name?.split(' ')[0] || 'Unknown'}
+                </p>
+                <p className={`text-[10px] sm:text-xs font-semibold mt-1 ${
+                  transaction.transactionType === 'DEBIT' 
+                    ? 'text-red-500 group-hover:text-red-600' 
+                    : 'text-green-500 group-hover:text-green-600'
+                } transition-colors`}>
+                  {transaction.transactionType === 'DEBIT' ? '-' : '+'}₹{transaction.amount}
+                </p>
               </div>
             ))}
           </div>
-        </section>
+          
+          {/* Empty state for no transactions */}
+          {recentContacts.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm">No recent transactions</p>
+            </div>
+          )}
+        </div>
 
         {/* Finance Blogs */}
-        <section className="mb-6">
-          <h2 className="text-base font-medium mb-3">{t.financeBlogs}</h2>
-          <div className="space-y-3">
-            {
-              news.map((item,index) => (
-                <BLog key={index} Title={item.title} Description={item.description} Url={item.url} />
-              ))
-            }
-            
-            <div className="bg-orange-100 text-orange-800 p-4 rounded-lg">
-              <h3 className="font-medium text-sm">{t.specialGuide}</h3>
-              <p className="text-xs">{t.savingTips}</p>
-            </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-20">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t.financeBlogs}</h2>
+          <div className="divide-y divide-gray-100">
+            {news.map((item, index) => (
+              <div key={index} className="py-4 first:pt-0 last:pb-0">
+                <BLog Title={item.title} Description={item.description} Url={item.url} />
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
       </main>
 
-      {/* Bottom Nav */}
-      <footer className="bg-white border-t py-2 px-4">
-        <div className="flex justify-between items-center">
-          <button className="flex flex-col items-center">
-            <Home className="h-5 w-5 text-seva-green" />
-            <span className="text-xs">{t.home}</span>
-          </button>
-          <button 
-            className="flex flex-col items-center"
-            onClick={handleHistoryClick}
-          >
-            <BarChart2 className="h-5 w-5 text-gray-400" />
-            <span className="text-xs text-gray-400">{t.report}</span>
-          </button>
-          <div className="flex items-center justify-center">
-            <div 
-              className="w-10 h-10 bg-seva-gold rounded-full flex items-center justify-center text-white cursor-pointer"
-              onClick={handleWalletClick}
-            >
-              <Wallet className="h-6 w-6" />
-            </div>
+      {/* Bottom Navigation */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t">
+        <div className="max-w-5xl mx-auto px-6 py-2">
+          <div className="flex justify-between items-center">
+          {[
+            {
+              icon: <Home className="h-5 w-5" />,
+              label: t.home,
+              active: true
+            },
+            {
+              icon: <BarChart2 className="h-5 w-5" />,
+              label: t.report,
+              onClick: handleHistoryClick
+            },
+            {
+              icon: <Wallet className="h-6 w-6" />,
+              label: '',
+              onClick: handleWalletClick,
+              special: true
+            },
+            {
+              icon: <Bell className="h-5 w-5" />,
+              label: t.notify
+            },
+            {
+              icon: <UserRound className="h-5 w-5" />,
+              label: t.profile,
+              onClick: handleProfileClick
+            }
+          ].map((item, index) => (
+            item.special ? (
+              <Button 
+                key={index}
+                onClick={item.onClick}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-14 w-14 flex items-center justify-center -mt-5 shadow-lg"
+              >
+                {item.icon}
+              </Button>
+            ) : (
+              <Button 
+                key={index}
+                variant="ghost" 
+                className={`flex flex-col items-center ${
+                  item.active ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                }`}
+                onClick={item.onClick}
+              >
+                {item.icon}
+                <span className="text-xs mt-1">{item.label}</span>
+              </Button>
+            )
+          ))}
           </div>
-          <button className="flex flex-col items-center">
-            <Bell className="h-5 w-5 text-gray-400" />
-            <span className="text-xs text-gray-400">{t.notify}</span>
-          </button>
-          <button 
-            className="flex flex-col items-center"
-            onClick={handleProfileClick}
-          >
-            <UserRound className="h-5 w-5 text-gray-400" />
-            <span className="text-xs text-gray-400">{t.profile}</span>
-          </button>
         </div>
       </footer>
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, MoreVertical, Copy, Share2 } from 'lucide-react';
@@ -82,32 +81,44 @@ const MyQRCode = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       {/* Header */}
-      <header className="p-4 flex justify-between items-center">
+      <header className="p-4 flex justify-between items-center bg-white border-b sticky top-0 z-50">
         <button 
           onClick={() => navigate('/dashboard')}
-          className="text-white"
+          className="text-gray-700 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-blue-50"
         >
-          <ArrowLeft className="w-6 h-6" />
+          <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex gap-4">
-          <button onClick={handleDownloadQR}>
-            <Download className="w-6 h-6" />
-          </button>
+        <h1 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+          My QR Code
+        </h1>
+        <div className="flex gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDownloadQR}
+            className="text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+          >
+            <Download className="w-5 h-5" />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button>
-                <MoreVertical className="w-6 h-6" />
-              </button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-gray-800 text-white border-gray-700">
-              <DropdownMenuItem onClick={handleCopyUpiId} className="cursor-pointer hover:bg-gray-700">
-                <Copy className="mr-2 h-4 w-4" />
+            <DropdownMenuContent className="bg-white border-gray-100 shadow-lg">
+              <DropdownMenuItem onClick={handleCopyUpiId} className="cursor-pointer hover:bg-blue-50">
+                <Copy className="mr-2 h-4 w-4 text-blue-600" />
                 <span>Copy UPI ID</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShareQR} className="cursor-pointer hover:bg-gray-700">
-                <Share2 className="mr-2 h-4 w-4" />
+              <DropdownMenuItem onClick={handleShareQR} className="cursor-pointer hover:bg-blue-50">
+                <Share2 className="mr-2 h-4 w-4 text-blue-600" />
                 <span>Share</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -116,96 +127,105 @@ const MyQRCode = () => {
       </header>
 
       {/* QR Code Card */}
-      <div className="mx-auto max-w-md p-4">
-        <div className="bg-gray-900 rounded-lg p-4 flex flex-col items-center">
+      <div className="mx-auto max-w-md p-6">
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
           {/* User Info */}
-          <div className="mb-4 flex items-center gap-2">
-            <Avatar className="h-8 w-8 bg-teal-500">
-              <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
+          <div className="mb-6 flex items-center gap-3 justify-center">
+            <Avatar className="h-12 w-12 ring-4 ring-blue-100">
+              <AvatarFallback className="bg-gradient-to-r from-blue-600 to-blue-500 text-white text-lg">
+                {firstName.charAt(0)}
+              </AvatarFallback>
             </Avatar>
-            <span className="text-lg font-medium">{userName}</span>
+            <div className="flex flex-col">
+              <span className="text-lg font-semibold text-gray-900">{userName}</span>
+              <span className="text-sm text-gray-500">{upiId}</span>
+            </div>
           </div>
 
           {/* QR Code */}
-          <div className="bg-white p-4 rounded-lg mb-3">
-            <QRCode 
-              value={`upi://pay?pa=${upiId}&pn=${userName.replace(' ', '%20')}&am=&cu=INR`}
-              size={200}
-              level="H"
-              className="mx-auto"
-            />
+          <div className="bg-gradient-to-br from-blue-100 to-blue-50 p-6 rounded-xl mb-4">
+            <div className="bg-white p-4 rounded-lg">
+              <QRCode 
+                value={`upi://pay?pa=${upiId}&pn=${userName.replace(' ', '%20')}&am=&cu=INR`}
+                size={200}
+                level="H"
+                className="mx-auto"
+              />
+            </div>
           </div>
-          <p className="text-sm text-gray-400 mb-4">Scan to pay with any UPI app</p>
-
-          {/* Bank Info */}
+          <p className="text-sm text-gray-500 text-center mb-6">
+            Scan to pay with any UPI app
+          </p>
 
           {/* UPI ID with copy option */}
-          <div className="w-full mt-3 flex items-center justify-between bg-gray-800 rounded-md px-4 py-2">
-            <div className="text-sm">UPI ID: {upiId}</div>
-            <button onClick={handleCopyUpiId}>
+          <div className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-3 mb-6">
+            <div className="text-sm text-gray-700">UPI ID: {upiId}</div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCopyUpiId}
+              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+            >
               <Copy className="h-4 w-4" />
-            </button>
+            </Button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              className="flex-1 border-2 border-blue-100 hover:bg-blue-50 text-blue-600"
+              onClick={() => navigate('/scan-qr')}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <span className="bg-blue-100 p-1.5 rounded-lg">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
+                    <rect x="7" y="7" width="10" height="10" rx="1" />
+                  </svg>
+                </span>
+                <span>Open scanner</span>
+              </div>
+            </Button>
+            
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button 
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <Share2 className="h-4 w-4" />
+                    <span>Share QR code</span>
+                  </div>
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="bg-white">
+                <div className="mt-6 flex flex-col gap-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Share via</h3>
+                  <div className="grid grid-cols-4 gap-4">
+                    {['WhatsApp', 'Telegram', 'Facebook', 'Messages'].map((app) => (
+                      <button 
+                        key={app} 
+                        className="flex flex-col items-center gap-2 group"
+                        onClick={() => {
+                          toast({
+                            title: `Sharing via ${app}`,
+                            description: "Opening share dialog...",
+                          });
+                        }}
+                      >
+                        <div className="bg-blue-50 w-14 h-14 rounded-xl flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
+                          {app[0]}
+                        </div>
+                        <span className="text-xs text-gray-600">{app}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2 mt-6">
-          <Button 
-            variant="outline" 
-            className="flex-1 bg-gray-800 hover:bg-gray-700 text-white border-gray-700"
-            onClick={() => navigate('/scan-qr')}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <span className="bg-gray-700 p-1 rounded">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 7V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M17 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M21 17V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M7 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <rect x="7" y="7" width="10" height="10" rx="1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </span>
-              <span>Open scanner</span>
-            </div>
-          </Button>
-          
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button 
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Share2 className="h-4 w-4" />
-                  <span>Share QR code</span>
-                </div>
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="bg-gray-900 text-white">
-              <div className="mt-6 flex flex-col gap-4">
-                <h3 className="text-lg font-medium">Share via</h3>
-                <div className="grid grid-cols-4 gap-4">
-                  {['WhatsApp', 'Telegram', 'Facebook', 'Messages'].map((app) => (
-                    <button 
-                      key={app} 
-                      className="flex flex-col items-center gap-1"
-                      onClick={() => {
-                        toast({
-                          title: `Sharing via ${app}`,
-                          description: "Opening share dialog...",
-                        });
-                      }}
-                    >
-                      <div className="bg-gray-800 w-12 h-12 rounded-full flex items-center justify-center">{app[0]}</div>
-                      <span className="text-xs">{app}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-
-       
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, EyeOff, Calendar } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Calendar, Shield } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -120,197 +120,232 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-seva-green">
-      <div className="container max-w-md mx-auto px-4 py-8">
-        {/* Back Button */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-600">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 text-white">
         <button 
           onClick={() => navigate('/')}
-          className="mb-6 text-white flex items-center"
+          className="flex items-center space-x-2 hover:opacity-80"
         >
-          <ArrowLeft className="w-5 h-5 mr-2" />
+          <ArrowLeft size={20} />
+          <span>Back</span>
         </button>
         
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Register</h1>
-          <p className="text-white/80 text-sm">
-            Already have an account? <a href="/" className="text-white underline">Log in</a>
-          </p>
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+            </div>
+          </div>
+          <span className="font-semibold">Digital Bharat Pay</span>
         </div>
         
-        {/* Registration Form */}
-        <Form {...form}>
-          <form 
-            onSubmit={(e) => {
-              console.log("Form submitted");
-              form.handleSubmit(handleSubmit)(e);
-            }}
-            className="space-y-4 bg-white rounded-lg p-4 shadow-md"
-          >
-            {/* Debug button to check form state */}
-            <button 
-              type="button" 
-              onClick={() => {
-                console.log("Form values:", form.getValues());
-                console.log("Form errors:", form.formState.errors);
-                console.log("Form is valid:", form.formState.isValid);
-              }}
-              className="mb-2 text-xs text-gray-500"
-            >
-              Debug Form State
-            </button>
-            
-            {/* Name Fields - row with two inputs */}
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700">Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Email Field */}
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700">Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* UPI ID Field - Added below Birth Date */}
-            <FormField
-              control={form.control}
-              name="upiId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700">UPI ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="username@bankname" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                  <p className="text-xs text-gray-500 mt-1">Format: username@bankname or username@upi</p>
-                </FormItem>
-              )}
-            />
-            
-            {/* Phone Number Field */}
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700">Phone Number</FormLabel>
-                  <FormControl>
-                    <div className="flex">
-                      <div className="bg-gray-100 border border-gray-300 rounded-l-md px-3 flex items-center">
-                        <span className="text-red-500 font-bold">+</span>
-                      </div>
-                      <Input 
-                        className="rounded-l-none" 
-                        type="tel" 
-                        placeholder="Phone Number" 
-                        {...field} 
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* PIN Field */}
-            <FormField
-              control={form.control}
-              name="pin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700">Create 6-Digit PIN</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input 
-                        type={showPin ? "text" : "password"} 
-                        placeholder="Enter 6-digit PIN" 
-                        maxLength={6}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        {...field} 
-                      />
-                      <button 
-                        type="button"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                        onClick={() => setShowPin(!showPin)}
-                      >
-                        {showPin ? (
-                          <EyeOff className="h-4 w-4 text-gray-500" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-gray-500" />
-                        )}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Confirm PIN Field */}
-            <FormField
-              control={form.control}
-              name="confirmPin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700">Confirm PIN</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input 
-                        type={showConfirmPin ? "text" : "password"} 
-                        placeholder="Confirm 6-digit PIN" 
-                        maxLength={6}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        {...field} 
-                      />
-                      <button 
-                        type="button"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                        onClick={() => setShowConfirmPin(!showConfirmPin)}
-                      >
-                        {showConfirmPin ? (
-                          <EyeOff className="h-4 w-4 text-gray-500" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-gray-500" />
-                        )}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Register Button */}
-            <Button 
-              type="submit" 
-              className="w-full bg-seva-green hover:bg-seva-green/90 text-white"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Registering..." : "Register"}
-            </Button>
-          </form>
-        </Form>
+        <div className="w-8"></div> {/* Spacer for layout balance */}
+      </div>
+
+      {/* Main Content */}
+      <div className="px-4 pb-8">
+        {/* Welcome Section */}
+        <div className="text-center text-white mb-8">
+          <h1 className="text-2xl font-bold mb-2">Create Account</h1>
+          <p className="text-blue-100">Join millions of users across India</p>
+        </div>
+
+        {/* Registration Form Container */}
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            {/* Security Indicators */}
+            <div className="bg-gray-50 px-6 py-3 flex items-center justify-center space-x-6">
+              <div className="flex items-center space-x-2">
+                <Shield className="w-4 h-4 text-blue-500" />
+                <span className="text-sm text-gray-600">Secure Registration</span>
+              </div>
+            </div>
+
+            {/* Form */}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="p-6 space-y-4">
+                {/* Name Field */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">Full Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter your full name" 
+                          className="h-12 border-gray-200" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Email Field */}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email" 
+                          placeholder="you@example.com" 
+                          className="h-12 border-gray-200" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* UPI ID Field */}
+                <FormField
+                  control={form.control}
+                  name="upiId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">UPI ID</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="username@bankname" 
+                          className="h-12 border-gray-200" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <p className="text-xs text-gray-500 mt-1">Format: username@bankname</p>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Phone Number Field */}
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">Phone Number</FormLabel>
+                      <FormControl>
+                        <div className="flex">
+                          <div className="bg-gray-50 border border-gray-200 rounded-l-md px-3 flex items-center">
+                            <span className="text-gray-500">+91</span>
+                          </div>
+                          <Input 
+                            className="h-12 rounded-l-none border-gray-200" 
+                            type="tel" 
+                            placeholder="Enter phone number" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* PIN Fields */}
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="pin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Create PIN</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showPin ? "text" : "password"} 
+                              placeholder="6-digit PIN" 
+                              className="h-12 border-gray-200" 
+                              maxLength={6}
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              {...field} 
+                            />
+                            <button 
+                              type="button"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                              onClick={() => setShowPin(!showPin)}
+                            >
+                              {showPin ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="confirmPin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Confirm PIN</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showConfirmPin ? "text" : "password"} 
+                              placeholder="Confirm 6-digit PIN" 
+                              className="h-12 border-gray-200" 
+                              maxLength={6}
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              {...field} 
+                            />
+                            <button 
+                              type="button"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                              onClick={() => setShowConfirmPin(!showConfirmPin)}
+                            >
+                              {showConfirmPin ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Creating Account..." : "Create Account"}
+                </Button>
+
+                {/* Login Link */}
+                <div className="text-center text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <button 
+                    type="button"
+                    onClick={() => navigate('/')}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Log In
+                  </button>
+                </div>
+              </form>
+            </Form>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-6 flex items-center justify-center text-white">
+            <div className="flex items-center space-x-2 text-sm">
+              <Shield className="w-4 h-4" />
+              <span>Bank Grade Security • RBI Compliant</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
